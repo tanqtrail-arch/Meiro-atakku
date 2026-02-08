@@ -56,7 +56,145 @@ const BOARD_SIZE = 7;
     // 壁は {cornerRow, cornerCol, orientation} で管理
     // cornerRow, cornerCol はコーナー位置（奇数行・奇数列）
     // orientation: 'h' (horizontal/横) or 'v' (vertical/縦)
-    
+
+    // ==================== 勝ちパターンシステム ====================
+    // AI (player2) は row=6 スタート → row=0 がゴール
+    // Player (player1) は row=0 スタート → row=6 がゴール
+
+    // 壁コンボ: 一緒に置くと相手に大迂回を強いる壁ペア
+    const WALL_COMBOS = [
+      // 中央上部封鎖: プレイヤーのゴール付近を左右から挟む
+      { walls: [{r:9,c:3,o:'h'}, {r:9,c:7,o:'h'}], name: 'lower_pinch' },
+      { walls: [{r:11,c:3,o:'h'}, {r:11,c:7,o:'h'}], name: 'goal_pinch' },
+      // 中段横断壁: プレイヤーの中央突破を阻止
+      { walls: [{r:5,c:1,o:'h'}, {r:5,c:5,o:'h'}], name: 'mid_barrier_left' },
+      { walls: [{r:5,c:5,o:'h'}, {r:5,c:9,o:'h'}], name: 'mid_barrier_right' },
+      // 上部封鎖: AI側ゴール付近の防衛（プレイヤーをゴールから遠ざける）
+      { walls: [{r:1,c:3,o:'h'}, {r:1,c:7,o:'h'}], name: 'top_barrier' },
+      { walls: [{r:3,c:3,o:'h'}, {r:3,c:7,o:'h'}], name: 'upper_barrier' },
+      // L字壁: 横＋縦で直角に曲がるバリア
+      { walls: [{r:5,c:1,o:'h'}, {r:3,c:1,o:'v'}], name: 'L_left' },
+      { walls: [{r:5,c:9,o:'h'}, {r:3,c:9,o:'v'}], name: 'L_right' },
+      // S字壁: プレイヤーを蛇行させる
+      { walls: [{r:3,c:3,o:'h'}, {r:7,c:7,o:'h'}], name: 'S_curve' },
+      { walls: [{r:3,c:7,o:'h'}, {r:7,c:3,o:'h'}], name: 'S_curve_rev' },
+    ];
+
+    // 勝ちパターン: 状況に応じた戦略
+    function checkWinPatterns(ai, player, aiDist, playerDist) {
+      const usedCard = (id) => (ai.cardsUsed[id] || 0) >= 1;
+      const turn = gameState.turn;
+
+      // --- パターン1: 終盤スプリント ---
+      // 自分がリードしていてゴール目前 → 壁を置かず全力で進む
+      if (aiDist <= 4 && aiDist < playerDist - 1) {
+        const aiPath = findShortestPath(ai.row, ai.col, 0);
+        if (aiPath && aiPath.length > 1) {
+          // ダッシュで即ゴールできるなら使う
+          if (!usedCard('dash') && aiDist <= 3 && hasDashTargetFor(2)) {
+            const dashTarget = getBestDashTarget(2);
+            if (dashTarget) {
+              const dashPath = findShortestPath(dashTarget.row, dashTarget.col, 0);
+              if (dashPath && dashPath.length < aiDist) {
+                return { type: 'card', cardId: 'dash', pattern: 'sprint_finish' };
+              }
+            }
+          }
+          const nextStep = aiPath[1];
+          const moves = getValidMoves(2);
+          const goal = moves.find(m => m.row === nextStep.row && m.col === nextStep.col);
+          if (goal) return { type: 'move', ...goal, pattern: 'sprint_finish' };
+        }
+      }
+
+      // --- パターン2: フリーズ＋壁＋突撃 ---
+      // 相手がゴール近くにいてfreezeが使える → freeze使って壁を置く時間を稼ぐ
+      if (!usedCard('freeze') && playerDist <= 4 && ai.walls > 0 && playerDist <= aiDist) {
+        return { type: 'card', cardId: 'freeze', pattern: 'freeze_wall_rush' };
+      }
+
+      // --- パターン3: 入替逆転 ---
+      // swapで大幅有利になるとき（スワップ後にAIがゴール近くになる）
+      if (!usedCard('swap') && turn >= 3) {
+        const swapDist = Math.abs(ai.row - player.row) + Math.abs(ai.col - player.col);
+        if (swapDist <= 2) {
+          const swappedAiDist = (findShortestPath(player.row, player.col, 0) || []).length || 999;
+          if (swappedAiDist <= 3 && swappedAiDist < aiDist - 2) {
+            return { type: 'card', cardId: 'swap', pattern: 'swap_reversal' };
+          }
+        }
+      }
+
+      // --- パターン4: 壁コンボ ---
+      // 壁が3つ以上あり、効果的な壁コンボの片方がまだ配置可能 → コンボを狙う
+      if (ai.walls >= 2 && playerDist <= aiDist + 3) {
+        const comboAction = findBestWallCombo(ai, player, playerDist);
+        if (comboAction) return comboAction;
+      }
+
+      // --- パターン5: 緊急防壁 ---
+      // 相手がゴール2歩以内 → 最も効果的な壁を必ず配置
+      if (playerDist <= 3 && ai.walls > 0) {
+        const bestWall = findBestWall();
+        if (bestWall) return { type: 'wall', ...bestWall, pattern: 'emergency_block' };
+      }
+
+      // --- パターン6: 序盤直進 ---
+      // 最初の数ターンは最短経路を直進（壁温存）
+      if (turn <= 4 && aiDist > playerDist - 2) {
+        const aiPath = findShortestPath(ai.row, ai.col, 0);
+        if (aiPath && aiPath.length > 1) {
+          const nextStep = aiPath[1];
+          const moves = getValidMoves(2);
+          const pathMove = moves.find(m => m.row === nextStep.row && m.col === nextStep.col);
+          if (pathMove) return { type: 'move', ...pathMove, pattern: 'opening_rush' };
+        }
+      }
+
+      return null; // パターンなし → 通常評価へ
+    }
+
+    // 壁コンボの中で最も効果的なものを探す
+    function findBestWallCombo(ai, player, playerDist) {
+      const playerGoal = BOARD_SIZE - 1;
+      let bestAction = null;
+      let bestIncrease = 0;
+
+      for (const combo of WALL_COMBOS) {
+        for (const wallDef of combo.walls) {
+          const wall = { cornerRow: wallDef.r, cornerCol: wallDef.c, orientation: wallDef.o };
+
+          // この壁が配置可能かチェック
+          if (!canPlaceWall(wall)) continue;
+
+          // 配置した場合の効果を計算
+          gameState.walls.push({ ...wall, owner: 2 });
+          const newPlayerPath = findShortestPath(player.row, player.col, playerGoal);
+          const newAiPath = findShortestPath(ai.row, ai.col, 0);
+          gameState.walls.pop();
+
+          if (!newPlayerPath || !newAiPath) continue;
+
+          const increase = newPlayerPath.length - playerDist;
+          const aiPenalty = newAiPath.length - (findShortestPath(ai.row, ai.col, 0) || []).length;
+
+          // コンボの片方が既に盤上にあれば追加ボーナス
+          const partner = combo.walls.find(w => w !== wallDef);
+          const partnerPlaced = gameState.walls.some(
+            w => w.cornerRow === partner.r && w.cornerCol === partner.c && w.orientation === partner.o
+          );
+          const comboBonus = partnerPlaced ? increase * 2 : 0;
+
+          const netEffect = increase - aiPenalty + comboBonus;
+          if (netEffect > bestIncrease && netEffect >= 2) {
+            bestIncrease = netEffect;
+            bestAction = { type: 'wall', cornerRow: wall.cornerRow, cornerCol: wall.cornerCol, orientation: wall.orientation, pattern: combo.name };
+          }
+        }
+      }
+
+      return bestAction;
+    }
     let animating = false; // カードアニメーション中のロック
 
     // トースト通知システム
@@ -286,7 +424,7 @@ const BOARD_SIZE = 7;
       return aiBestMove(ai, aiPath);
     }
 
-    // 上級AI: 統合評価 + 2手先読み + カード使用
+    // 上級AI: 統合評価 + 2手先読み + カード使用 + 勝ちパターン
     function aiHardAction() {
       const ai = gameState.players[2];
       const player = gameState.players[1];
@@ -303,6 +441,10 @@ const BOARD_SIZE = 7;
         const goal = moves.find(m => m.row === nextStep.row && m.col === nextStep.col);
         if (goal) return { type: 'move', ...goal };
       }
+
+      // 勝ちパターンをチェック（通常評価より優先）
+      const patternAction = checkWinPatterns(ai, player, aiDist, playerDist);
+      if (patternAction) return patternAction;
 
       // 全候補アクションをスコアリングして最善手を選ぶ
       let bestAction = null;
@@ -439,6 +581,10 @@ const BOARD_SIZE = 7;
         const goal = moves.find(m => m.row === nextStep.row && m.col === nextStep.col);
         if (goal) return { type: 'move', ...goal };
       }
+
+      // 勝ちパターンをチェック（通常評価より優先）
+      const patternAction = checkWinPatterns(ai, player, aiDist, playerDist);
+      if (patternAction) return patternAction;
 
       // 全候補アクションをスコアリング
       let bestAction = null;
