@@ -1425,11 +1425,14 @@ const BOARD_SIZE = 7;
         btn.disabled = !canSlide;
       }
 
-      document.getElementById('slide-modal').classList.add('show');
+      const slideModal = document.getElementById('slide-modal');
+      slideModal.classList.toggle('rotated-for-p1', gameState.currentPlayer === 1 && gameMode !== 'ai');
+      slideModal.classList.add('show');
     }
 
     function closeSlideModal() {
-      document.getElementById('slide-modal').classList.remove('show');
+      const slideModal = document.getElementById('slide-modal');
+      slideModal.classList.remove('show', 'rotated-for-p1');
       gameState.slideTargetWall = null;
     }
 
@@ -1728,11 +1731,15 @@ const BOARD_SIZE = 7;
         grid.parentNode.insertBefore(hint, grid.nextSibling);
       }
 
-      document.getElementById('card-modal').classList.add('show');
+      const cardModal = document.getElementById('card-modal');
+      // 対面モード時、プレイヤー1ならモーダルを回転
+      cardModal.classList.toggle('rotated-for-p1', gameState.currentPlayer === 1 && gameMode !== 'ai');
+      cardModal.classList.add('show');
     }
 
     function closeCardModal() {
-      document.getElementById('card-modal').classList.remove('show');
+      const cardModal = document.getElementById('card-modal');
+      cardModal.classList.remove('show', 'rotated-for-p1');
     }
 
     function canUseCard(cardId) {

@@ -521,6 +521,12 @@
       overflow-y: auto;
       box-shadow: 0 8px 32px rgba(0,0,0,0.3);
       border: 3px solid #e1bee7;
+      transition: transform 0.2s;
+    }
+
+    /* 対面モード: プレイヤー1のカードモーダルを180度回転 */
+    .card-modal-overlay.rotated-for-p1 .card-modal {
+      transform: rotate(180deg);
     }
 
     .card-modal h2 {
@@ -821,22 +827,14 @@
       order: 1;
     }
 
-    /* ちゃとら側は180度回転（上から見るため） */
-    .rotated {
+    /* ちゃとら側は全体を180度回転（対面プレイ用） */
+    .player1-controls {
       transform: rotate(180deg);
     }
 
-    /* rotated内のボタンのテキストは読めるように戻す */
-    .rotated button {
-      transform: rotate(180deg);
-    }
-
-    .player1-controls .turn-indicator {
-      transform: rotate(180deg);
-    }
-
-    .player1-controls .player-info {
-      transform: rotate(180deg);
+    /* AIモード時は回転不要 */
+    .game-container.ai-mode .player1-controls {
+      transform: none;
     }
 
     /* 非アクティブなプレイヤーのコントロールを薄く */
@@ -1397,6 +1395,11 @@
       pointer-events: none;
     }
 
+    /* AIモード時はちゃとら側の要素順を正順に戻す */
+    .game-container.ai-mode .player1-controls {
+      flex-direction: column-reverse;
+    }
+
     /* ターン切り替え時のスクロールマージン */
     .player-controls {
       scroll-margin-top: 10px;
@@ -1712,23 +1715,23 @@
 
   <!-- ちゃとら用コントロール（上側）- 下方向に進む -->
   <div class="player-controls player1-controls" id="player1-controls">
+    <div class="mode-indicator" id="mode-indicator">モード: ねこをうごかす</div>
+    <div class="controls-row2">
+      <button class="btn-card" id="btn-card" onclick="openCardModal()">🎴 カード</button>
+      <button class="btn-reset" onclick="undoMove()">↩️</button>
+    </div>
+    <div class="controls">
+      <button class="btn-move active" id="btn-move" onclick="setMode('move')">🐾 うごく</button>
+      <button class="btn-wall" id="btn-wall-h" onclick="setWallMode('h')">━ かべ</button>
+      <button class="btn-wall" id="btn-wall-v" onclick="setWallMode('v')">┃ かべ</button>
+    </div>
+    <div class="turn-indicator" id="turn-indicator">🐈 ちゃとら のターン</div>
     <div class="player-info player1" id="player1-info">
       <div class="player-name">🐈 ちゃとら ⬇️</div>
       <div class="walls-left">のこり壁: <span id="walls1">6</span>枚</div>
       <div class="walls-display" id="walls1-display">🧱🧱🧱🧱🧱🧱</div>
       <div class="card-status" id="card-status1">🎴 カード: 2枚</div>
     </div>
-    <div class="turn-indicator" id="turn-indicator">🐈 ちゃとら のターン</div>
-    <div class="controls rotated">
-      <button class="btn-move active" id="btn-move" onclick="setMode('move')">🐾 うごく</button>
-      <button class="btn-wall" id="btn-wall-h" onclick="setWallMode('h')">━ かべ</button>
-      <button class="btn-wall" id="btn-wall-v" onclick="setWallMode('v')">┃ かべ</button>
-    </div>
-    <div class="controls-row2 rotated">
-      <button class="btn-card" id="btn-card" onclick="openCardModal()">🎴 カード</button>
-      <button class="btn-reset" onclick="undoMove()">↩️</button>
-    </div>
-    <div class="mode-indicator rotated" id="mode-indicator">モード: ねこをうごかす</div>
   </div>
 
   <div class="board-container">
