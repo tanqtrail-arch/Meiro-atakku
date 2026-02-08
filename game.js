@@ -58,6 +58,18 @@ const BOARD_SIZE = 7;
     // orientation: 'h' (horizontal/横) or 'v' (vertical/縦)
     
     let animating = false; // カードアニメーション中のロック
+
+    // トースト通知システム
+    function showToast(message, type = 'warn', duration = 2000) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+      }, duration);
+    }
     
     let gameState = {
       currentPlayer: 1,
@@ -551,7 +563,7 @@ const BOARD_SIZE = 7;
       document.getElementById('boss-desc').textContent = `${trainingTotal}戦の けいけんを つんだ！`;
       document.getElementById('train-status').textContent = `✓ 学習完了！（${aiLearningData.wins[2]}勝）`;
       
-      alert(`🧠 トレーニング完了！\n\nボスねこは${trainingTotal}回の対戦で\n${aiLearningData.wins[2]}回勝利しました！\n\nより強くなったボスねこと対戦しよう！`);
+      showToast(`トレーニング完了！ ボスねこは${aiLearningData.wins[2]}勝しました`, 'success', 3000);
     }
 
     // AIの行動を実行
@@ -835,7 +847,9 @@ const BOARD_SIZE = 7;
       return bestCorner;
     }
 
-    function renderCats() {
+    let lastCatPositions = { 1: null, 2: null };
+
+    function renderCats(movedPlayer) {
       document.querySelectorAll('.cat').forEach(el => el.remove());
 
       for (let p = 1; p <= 2; p++) {
@@ -843,7 +857,7 @@ const BOARD_SIZE = 7;
         const gridRow = player.row * 2;
         const gridCol = player.col * 2;
         const cell = document.querySelector(`.cell[data-row="${gridRow}"][data-col="${gridCol}"]`);
-        
+
         if (cell) {
           const cat = document.createElement('span');
           cat.className = 'cat ' + (p === 1 ? 'cat-down' : 'cat-up');
@@ -854,8 +868,14 @@ const BOARD_SIZE = 7;
           } else {
             cat.style.textShadow = '0 0 3px #000, 0 0 5px #000';
           }
+          // 移動時のバウンスアニメーション
+          if (p === movedPlayer) {
+            cat.classList.add('moving');
+            setTimeout(() => cat.classList.remove('moving'), 350);
+          }
           cell.appendChild(cat);
         }
+        lastCatPositions[p] = { row: player.row, col: player.col };
       }
     }
 
@@ -967,7 +987,7 @@ const BOARD_SIZE = 7;
       
       // 足止め中は移動不可
       if (player.frozen) {
-        alert('足止めされていて移動できないよ！壁を置くかカードを使おう！');
+        showToast('足止めされていて移動できないよ！壁かカードを使おう', 'warn');
         return;
       }
       const dr = Math.abs(boardRow - player.row);
@@ -987,8 +1007,8 @@ const BOARD_SIZE = 7;
 
           player.row = boardRow;
           player.col = boardCol;
-          
-          renderCats();
+
+          renderCats(gameState.currentPlayer);
           checkWin();
           
           if (!gameState.gameOver) {
@@ -1133,7 +1153,7 @@ const BOARD_SIZE = 7;
           switchPlayer();
           return;
         } else {
-          alert('ここには壁を置けないよ！');
+          showToast('ここには壁を置けないよ！', 'warn');
           gameState.previewWall = null;
           renderWalls();
           return;
@@ -1153,7 +1173,7 @@ const BOARD_SIZE = 7;
         if (canPlaceWall(newWall)) {
           gameState.previewWall = newWall;
         } else {
-          alert('ここには壁を置けないよ！');
+          showToast('ここには壁を置けないよ！', 'warn');
           return;
         }
       }
@@ -1362,10 +1382,10 @@ const BOARD_SIZE = 7;
         }
         
         gameState.walls.push(wall);
-        alert('回転できないよ！');
+        showToast('回転できないよ！', 'warn');
       } else if (card === 'recover') {
         if (wall.owner !== gameState.currentPlayer) {
-          alert('自分がおいた壁しか回収できないよ！');
+          showToast('自分がおいた壁しか回収できないよ！', 'warn');
           return;
         }
         const savedWall = {...wall};
@@ -1503,7 +1523,7 @@ const BOARD_SIZE = 7;
         });
       } else {
         gameState.walls.push(wall);
-        alert('そっちにはスライドできないよ！');
+        showToast('そっちにはスライドできないよ！', 'warn');
       }
     }
 
@@ -1639,7 +1659,7 @@ const BOARD_SIZE = 7;
 
       // 2枚使い切っていたら使えない
       if (player.totalCardsUsed >= MAX_CARDS_PER_PLAYER) {
-        alert('カードはもう使えないよ！（2枚使用済み）');
+        showToast('カードはもう使えないよ！', 'warn');
         return;
       }
 
@@ -1652,27 +1672,37 @@ const BOARD_SIZE = 7;
       SKILL_CARDS.forEach(card => {
         const cardEl = document.createElement('div');
         cardEl.className = 'skill-card';
-        
+
         const usedCount = player.cardsUsed[card.id] || 0;
         const canUseMore = usedCount < card.limit;
         const canUse = canUseMore && canUseCard(card.id);
-        
-        if (!canUse) cardEl.classList.add('disabled');
+
+        if (!canUse) {
+          cardEl.classList.add('disabled');
+          // 使用回数が残っているが条件不成立の場合は「available」を追加（::afterで「使用済」を表示しない）
+          if (canUseMore) cardEl.classList.add('available');
+        }
         if (canUse) hasAvailableCard = true;
 
-        const remainText = canUseMore ? '' : '（使用済）';
         const imgSrc = CARD_IMAGES[card.id];
+        let statusText = '';
+        if (!canUseMore) {
+          statusText = '<div class="card-name" style="margin-top:4px;font-size:0.75em;color:#c0392b;">使用済み</div>';
+        } else if (!canUse) {
+          statusText = '<div class="card-name" style="margin-top:4px;font-size:0.7em;color:#7f8c8d;">条件を みたしていない</div>';
+        }
 
         if (imgSrc) {
           cardEl.innerHTML = `
             <img src="${imgSrc}" class="card-image" alt="${card.name}" style="width:100%;height:auto;border-radius:10px;display:block;">
-            ${remainText ? '<div class="card-name" style="margin-top:4px;font-size:0.8em;color:#999;">' + remainText + '</div>' : ''}
+            ${statusText}
           `;
         } else {
           cardEl.innerHTML = `
             <div class="card-icon">${card.icon}</div>
-            <div class="card-name">${card.name}${remainText}</div>
+            <div class="card-name">${card.name}</div>
             <div class="card-desc">${card.desc}</div>
+            ${statusText}
           `;
         }
 
@@ -1684,8 +1714,18 @@ const BOARD_SIZE = 7;
       });
 
       if (!hasAvailableCard) {
-        alert('使えるカードがないよ！');
+        showToast('使えるカードがないよ！', 'info');
         return;
+      }
+
+      // スクロールヒント（カードが多い場合）
+      const existingHint = grid.parentNode.querySelector('.scroll-hint');
+      if (existingHint) existingHint.remove();
+      if (SKILL_CARDS.length > 6) {
+        const hint = document.createElement('div');
+        hint.className = 'scroll-hint';
+        hint.textContent = '↓ スクロールして もっとみる';
+        grid.parentNode.insertBefore(hint, grid.nextSibling);
       }
 
       document.getElementById('card-modal').classList.add('show');
@@ -2452,43 +2492,72 @@ const BOARD_SIZE = 7;
     function updateUI() {
       const player1Info = document.getElementById('player1-info');
       const player2Info = document.getElementById('player2-info');
-      
+
       player1Info.classList.toggle('active', gameState.currentPlayer === 1);
       player2Info.classList.toggle('active', gameState.currentPlayer === 2);
 
+      // 凍結状態の表示
+      player1Info.classList.toggle('frozen-state', gameState.players[1].frozen);
+      player2Info.classList.toggle('frozen-state', gameState.players[2].frozen);
+
       document.getElementById('walls1').textContent = gameState.players[1].walls;
       document.getElementById('walls2').textContent = gameState.players[2].walls;
-      
+
       document.getElementById('walls1-display').textContent = '🧱'.repeat(gameState.players[1].walls);
       document.getElementById('walls2-display').textContent = '🧱'.repeat(gameState.players[2].walls);
 
-      const card1 = document.getElementById('card-status1');
-      const card2 = document.getElementById('card-status2');
-      
+      // カード使用状況をドット表示で更新
       const remaining1 = getRemainingCards(1);
       const remaining2 = getRemainingCards(2);
-      
-      card1.textContent = `🎴 カード: ${remaining1}枚`;
+      const used1 = MAX_CARDS_PER_PLAYER - remaining1;
+      const used2 = MAX_CARDS_PER_PLAYER - remaining2;
+
+      const card1 = document.getElementById('card-status1');
+      const card2 = document.getElementById('card-status2');
+
+      card1.innerHTML = `🎴 カード: ${remaining1}枚` +
+        (gameState.players[1].frozen ? ' <span class="frozen-badge">❄️ 足止め</span>' : '') +
+        '<div class="card-usage-bar">' +
+        Array.from({length: MAX_CARDS_PER_PLAYER}, (_, i) =>
+          `<span class="card-usage-dot${i < used1 ? ' used' : ''}"></span>`
+        ).join('') + '</div>';
       card1.classList.toggle('used', remaining1 === 0);
-      
-      card2.textContent = `🎴 カード: ${remaining2}枚`;
+
+      card2.innerHTML = `🎴 カード: ${remaining2}枚` +
+        (gameState.players[2].frozen ? ' <span class="frozen-badge">❄️ 足止め</span>' : '') +
+        '<div class="card-usage-bar">' +
+        Array.from({length: MAX_CARDS_PER_PLAYER}, (_, i) =>
+          `<span class="card-usage-dot${i < used2 ? ' used' : ''}"></span>`
+        ).join('') + '</div>';
       card2.classList.toggle('used', remaining2 === 0);
 
-      const turnText = gameState.currentPlayer === 1 ? '🐈 ちゃとら のターン' : '🐈‍⬛ くろねこ のターン';
-      // 上側（ちゃとら用）は常にちゃとらのターン表示
-      document.getElementById('turn-indicator').textContent = '🐈 ちゃとら のターン';
-      // 下側（くろねこ用）は常にくろねこのターン表示
-      document.getElementById('turn-indicator2').textContent = '🐈‍⬛ くろねこ のターン';
+      // ターンインジケータ: 現在のプレイヤーを明確に表示
+      const turnEl1 = document.getElementById('turn-indicator');
+      const turnEl2 = document.getElementById('turn-indicator2');
+      const turnCount = `<span class="turn-count">ターン ${gameState.turn}</span>`;
+
+      if (gameState.currentPlayer === 1) {
+        turnEl1.innerHTML = '🐈 きみのターン！' + turnCount;
+        turnEl2.innerHTML = '🐈 あいてのターン...' + turnCount;
+      } else {
+        turnEl1.innerHTML = '🐈‍⬛ あいてのターン...' + turnCount;
+        turnEl2.innerHTML = '🐈‍⬛ きみのターン！' + turnCount;
+      }
+      // ターン切り替えアニメーション
+      const activeTurnEl = gameState.currentPlayer === 1 ? turnEl1 : turnEl2;
+      activeTurnEl.classList.remove('turn-switch');
+      void activeTurnEl.offsetWidth; // reflow
+      activeTurnEl.classList.add('turn-switch');
 
       const currentPlayer = gameState.players[gameState.currentPlayer];
       const wallsDisabled = currentPlayer.walls <= 0;
       const cardsDisabled = getRemainingCards(gameState.currentPlayer) === 0;
-      
+
       // ちゃとら用コントロール
       document.getElementById('btn-wall-h').disabled = wallsDisabled;
       document.getElementById('btn-wall-v').disabled = wallsDisabled;
       document.getElementById('btn-card').disabled = cardsDisabled;
-      
+
       // くろねこ用コントロール
       document.getElementById('btn-wall-h2').disabled = wallsDisabled;
       document.getElementById('btn-wall-v2').disabled = wallsDisabled;
@@ -2497,8 +2566,6 @@ const BOARD_SIZE = 7;
       // 対面モード：現在のプレイヤーのコントロールだけアクティブ
       document.getElementById('player1-controls').classList.toggle('inactive', gameState.currentPlayer !== 1);
       document.getElementById('player2-controls').classList.toggle('inactive', gameState.currentPlayer !== 2);
-
-      // ターン切り替え時のスクロールは無効化
     }
 
     function getRemainingCards(playerNum) {
