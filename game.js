@@ -1260,7 +1260,13 @@ const BOARD_SIZE = 7;
       }
 
       if (action.type === 'card') {
-        // AIのカード使用
+        // AIのカード使用（ゲームルールで使用可能か最終チェック）
+        if (!canUseCard(action.cardId)) {
+          // ルール上使用不可 → カードをスキップして通常行動にフォールバック
+          gameState.selectedCard = null;
+          switchPlayer();
+          return;
+        }
         saveHistory();
         gameState.selectedCard = action.cardId;
         if (action.cardId === 'swap') {
