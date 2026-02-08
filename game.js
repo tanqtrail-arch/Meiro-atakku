@@ -2432,7 +2432,7 @@ const BOARD_SIZE = 7;
 
     function clearHighlights() {
       document.querySelectorAll('.cell').forEach(cell => {
-        cell.classList.remove('highlight', 'highlight-special', 'highlight-wall', 'highlight-corner');
+        cell.classList.remove('highlight', 'highlight-special', 'highlight-wall', 'highlight-corner', 'goal-reachable');
       });
     }
 
@@ -2455,14 +2455,21 @@ const BOARD_SIZE = 7;
         const other = gameState.players[gameState.currentPlayer === 1 ? 2 : 1];
         const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
+        const goalRow = gameState.currentPlayer === 1 ? BOARD_SIZE - 1 : 0;
+
         for (const [dr, dc] of directions) {
           const nr = player.row + dr;
           const nc = player.col + dc;
-          
+
           if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
             if (!isWallBetween(player.row, player.col, nr, nc)) {
               if (!(nr === other.row && nc === other.col)) {
-                highlightFloor(nr, nc, 'highlight');
+                // ゴールに止まれるマスは特別に光らせる
+                if (nr === goalRow) {
+                  highlightFloor(nr, nc, 'goal-reachable');
+                } else {
+                  highlightFloor(nr, nc, 'highlight');
+                }
               }
             }
           }
