@@ -468,11 +468,12 @@ const BOARD_SIZE = 7;
         const newPath = findShortestPath(player.row, player.col, playerGoal);
         gameState.walls.pop();
         
-        if (newPath) {
-          const increase = newPath.length - currentDist;
-          score += increase * 2000; // ブロック効果を大きく評価
-        }
-        
+        // 経路が完全に塞がる壁は除外（安全策）
+        if (!newPath) return { ...wall, score: -1 };
+
+        const increase = newPath.length - currentDist;
+        score += increase * 2000; // ブロック効果を大きく評価
+
         return { ...wall, score };
       });
       
@@ -1036,8 +1037,8 @@ const BOARD_SIZE = 7;
 
         gameState.walls.pop();
 
-        // 相手の経路完全遮断は避ける（パスがなくなる壁は除外）
-        if (!newPlayerPath) continue;
+        // 経路完全遮断は避ける（どちらかのパスがなくなる壁は除外）
+        if (!newPlayerPath || !newAiPath) continue;
 
         const playerIncrease = newPlayerDist - currentPlayerDist;
         const aiIncrease = newAiDist - currentAiDist;
@@ -1623,7 +1624,7 @@ const BOARD_SIZE = 7;
 
     function canReachGoal(playerNum) {
       const player = gameState.players[playerNum];
-      const goalRow = playerNum === 1 ? 0 : BOARD_SIZE - 1;
+      const goalRow = playerNum === 1 ? BOARD_SIZE - 1 : 0;
       
       const visited = new Set();
       const queue = [[player.row, player.col]];
