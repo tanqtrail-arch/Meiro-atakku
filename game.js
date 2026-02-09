@@ -81,80 +81,18 @@ const BOARD_SIZE = 7;
     ];
 
     // 勝ちパターン: 状況に応じた戦略
+    // 強制パターン: 通常評価を飛ばして即決すべき局面のみ
+    // 「相手があと1歩でゴール」の緊急時だけ壁で止める
+    // それ以外は全てscoreMoveNPly + scoreLearnedBestWallの統合評価に任せる
     function checkWinPatterns(ai, player, aiDist, playerDist) {
-      const usedCard = (id) => (ai.cardsUsed[id] || 0) >= 1;
-      const turn = gameState.turn;
-
-      // --- パターン1: 終盤スプリント ---
-      // 自分がリードしていてゴール目前 → 壁を置かず全力で進む
-      // リード条件を緩和: 同距離でも自分のターンなら有利
-      if (aiDist <= 4 && aiDist <= playerDist) {
-        const aiPath = findShortestPath(ai.row, ai.col, 0);
-        if (aiPath && aiPath.length > 1) {
-          // ダッシュで即ゴールできるなら使う
-          if (!usedCard('dash') && aiDist <= 3 && hasDashTargetFor(2)) {
-            const dashTarget = getBestDashTarget(2);
-            if (dashTarget) {
-              const dashPath = findShortestPath(dashTarget.row, dashTarget.col, 0);
-              if (dashPath && dashPath.length < aiDist) {
-                return { type: 'card', cardId: 'dash', pattern: 'sprint_finish' };
-              }
-            }
-          }
-          const nextStep = aiPath[1];
-          const moves = getValidMoves(2);
-          const goal = moves.find(m => m.row === nextStep.row && m.col === nextStep.col);
-          if (goal) return { type: 'move', ...goal, pattern: 'sprint_finish' };
-        }
-      }
-
-      // --- パターン2: フリーズ＋壁＋突撃 ---
-      // 相手がゴール近くにいてfreezeが使える → freeze使って壁を置く時間を稼ぐ
-      // ただし自分がリードしている場合はfreezeを温存して移動優先
-      if (!usedCard('freeze') && playerDist <= 3 && ai.walls > 0 && playerDist < aiDist) {
-        return { type: 'card', cardId: 'freeze', pattern: 'freeze_wall_rush' };
-      }
-
-      // --- パターン3: 入替逆転 ---
-      // swapで大幅有利になるとき（スワップ後にAIがゴール近くになる）
-      if (!usedCard('swap') && turn >= 3) {
-        const swapDist = Math.abs(ai.row - player.row) + Math.abs(ai.col - player.col);
-        if (swapDist <= 2) {
-          const swappedAiDist = (findShortestPath(player.row, player.col, 0) || []).length || 999;
-          if (swappedAiDist <= 3 && swappedAiDist < aiDist - 2) {
-            return { type: 'card', cardId: 'swap', pattern: 'swap_reversal' };
-          }
-        }
-      }
-
-      // --- パターン4: 壁コンボ ---
-      // 壁が3つ以上あり、効果的な壁コンボの片方がまだ配置可能 → コンボを狙う
-      if (ai.walls >= 2 && playerDist <= aiDist + 3) {
-        const comboAction = findBestWallCombo(ai, player, playerDist);
-        if (comboAction) return comboAction;
-      }
-
-      // --- パターン5: 緊急防壁 ---
-      // 相手がゴール2歩以内 → 最も効果的な壁を必ず配置
-      // ただし自分のほうがゴールに近い場合は移動を優先（攻撃優先）
-      if (playerDist <= 2 && ai.walls > 0 && aiDist > playerDist) {
+      // --- 緊急防壁: 相手がゴール1歩(距離2=現在地+ゴール) ---
+      // 壁を置かないと次ターンで負ける
+      if (playerDist === 2 && ai.walls > 0 && aiDist > 2) {
         const bestWall = findBestWall();
         if (bestWall) return { type: 'wall', ...bestWall, pattern: 'emergency_block' };
       }
 
-      // --- パターン6: 序盤直進 ---
-      // 最初の数ターンは最短経路を直進（壁温存）
-      if (turn <= 4 && aiDist > playerDist - 2) {
-        const aiPath = findShortestPath(ai.row, ai.col, 0);
-        if (aiPath && aiPath.length > 1) {
-          const nextStep = aiPath[1];
-          const moves = getValidMoves(2);
-          const pathMove = moves.find(m => m.row === nextStep.row && m.col === nextStep.col);
-          if (pathMove) return { type: 'move', ...pathMove, pattern: 'opening_rush' };
-        }
-      }
-
-      return null; // パターンなし → 通常評価へ
+      return null; // 通常評価へ
     }
 
     // 壁コンボの中で最も効果的なものを探す
@@ -449,37 +387,39 @@ const BOARD_SIZE = 7;
       const patternAction = checkWinPatterns(ai, player, aiDist, playerDist);
       if (patternAction) return patternAction;
 
-      // 全候補アクションをスコアリングして最善手を選ぶ
-      let bestAction = null;
-      let bestScore = -Infinity;
-
-      // === 1. 移動候補（2手先読み） ===
+      // === 1. 最善移動を見つける（2手先読み） ===
+      let bestMoveAction = null;
+      let bestMoveScore = -Infinity;
       const moves = getValidMoves(2);
       for (const m of moves) {
         const score = scoreMoveNPly(ai, player, m, 2);
-        if (score > bestScore) {
-          bestScore = score;
-          bestAction = { type: 'move', ...m };
+        if (score > bestMoveScore) {
+          bestMoveScore = score;
+          bestMoveAction = { type: 'move', ...m };
         }
       }
 
-      // === 2. 壁候補（相手応答込みスコアリング） ===
+      // === 2. 壁候補（スコア>0なら最善移動より壁が良い） ===
+      // scoreLearnedBestWallは内部で移動の機会コストを差し引き済み
+      let wallAction = null;
       if (ai.walls > 0) {
         const wallResult = scoreLearnedBestWall(ai, player, aiDist, playerDist);
-        if (wallResult && wallResult.score > bestScore) {
-          bestScore = wallResult.score;
-          bestAction = { type: 'wall', ...wallResult.wall };
+        if (wallResult && wallResult.score > 0) {
+          wallAction = { type: 'wall', ...wallResult.wall, _score: wallResult.score };
         }
       }
 
-      // === 3. カード候補（テンポスコア評価） ===
+      // === 3. カード候補 ===
+      let cardAction = null;
       const cardResult = scoreCardActions(ai, player, aiDist, playerDist);
-      if (cardResult && cardResult.score > bestScore) {
-        bestScore = cardResult.score;
-        bestAction = cardResult.action;
+      if (cardResult && cardResult.score > bestMoveScore) {
+        cardAction = cardResult.action;
       }
 
-      return bestAction || aiBestMove(ai, aiPath);
+      // 壁 > カード > 移動 の優先度（壁scoreは機会コスト込みで正ならすでに移動より良い）
+      if (wallAction) return wallAction;
+      if (cardAction) return cardAction;
+      return bestMoveAction || aiBestMove(ai, aiPath);
     }
 
     // 壁を置くか移動するかの戦略判断（難易度別）
@@ -589,123 +529,123 @@ const BOARD_SIZE = 7;
       const patternAction = checkWinPatterns(ai, player, aiDist, playerDist);
       if (patternAction) return patternAction;
 
-      // 全候補アクションをスコアリング
-      let bestAction = null;
-      let bestScore = -Infinity;
-
-      // === 1. 移動候補（3手先読み） ===
+      // === 1. 最善移動を見つける（3手先読み） ===
+      let bestMoveAction = null;
+      let bestMoveScore = -Infinity;
       const moves = getValidMoves(2);
       for (const m of moves) {
         const score = scoreMoveNPly(ai, player, m, 3);
-        if (score > bestScore) {
-          bestScore = score;
-          bestAction = { type: 'move', ...m };
+        if (score > bestMoveScore) {
+          bestMoveScore = score;
+          bestMoveAction = { type: 'move', ...m };
         }
       }
 
-      // === 2. 壁候補（相手応答込みスコアリング） ===
+      // === 2. 壁候補（スコア>0なら最善移動より壁が良い） ===
+      let wallAction = null;
       if (ai.walls > 0) {
         const wallResult = scoreLearnedBestWall(ai, player, aiDist, playerDist);
-        if (wallResult && wallResult.score > bestScore) {
-          bestScore = wallResult.score;
-          bestAction = { type: 'wall', ...wallResult.wall };
+        if (wallResult && wallResult.score > 0) {
+          wallAction = { type: 'wall', ...wallResult.wall, _score: wallResult.score };
         }
       }
 
-      // === 3. カード候補（テンポスコアで評価） ===
+      // === 3. カード候補 ===
+      let cardAction = null;
       const cardResult = scoreCardActions(ai, player, aiDist, playerDist);
-      if (cardResult && cardResult.score > bestScore) {
-        bestScore = cardResult.score;
-        bestAction = cardResult.action;
+      if (cardResult && cardResult.score > bestMoveScore) {
+        cardAction = cardResult.action;
       }
 
-      return bestAction || aiBestMove(ai, aiPath);
+      // 壁 > カード > 移動
+      if (wallAction) return wallAction;
+      if (cardAction) return cardAction;
+      return bestMoveAction || aiBestMove(ai, aiPath);
     }
 
     // N手先読み移動スコア（ボスねこ: depth=2, ボスねこ+: depth=3）
-    // 攻守両立: 自分の前進 + 相手の妨害を同時に評価
+    // 核心: 最短経路を辿ることを最優先 + テンポ差で壁との比較
     function scoreMoveNPly(ai, player, move, depth) {
       const playerGoal = BOARD_SIZE - 1;
       const savedAiRow = ai.row, savedAiCol = ai.col;
-      ai.row = move.row; ai.col = move.col;
 
       // ゴール到達は最高スコア
-      if (move.row === 0) {
-        ai.row = savedAiRow; ai.col = savedAiCol;
-        return 10000;
-      }
+      if (move.row === 0) return 10000;
 
-      const myDist = (findShortestPath(move.row, move.col, 0) || []).length || 999;
+      // === 現在の距離（移動前） ===
+      const currentDist = (findShortestPath(ai.row, ai.col, 0) || []).length || 999;
 
-      // この移動で相手の経路がどう変わるか（位置取りブロック効果）
-      const opDistBefore = (findShortestPath(player.row, player.col, playerGoal) || []).length || 999;
+      // === 移動後の自分の距離 ===
+      ai.row = move.row; ai.col = move.col;
+      const newDist = (findShortestPath(move.row, move.col, 0) || []).length || 999;
 
-      // 相手の最善応答を先読み
+      // === 前進度（最短経路を辿っているか？） ===
+      const advanceGain = currentDist - newDist;
+
+      // === 相手の最善応答を先読み → 最悪ケーステンポ ===
       const opMoves = getValidMoves(1);
-      let worstCaseTempo = Infinity;
+      let bestOpDist = 999; // 相手が最善手を打った後の最短距離（小さいほど相手有利）
 
       for (const om of opMoves) {
         const savedOpRow = player.row, savedOpCol = player.col;
         player.row = om.row; player.col = om.col;
 
         if (om.row === playerGoal) {
+          // 相手がゴール到達可能 → 最悪ケース
           player.row = savedOpRow; player.col = savedOpCol;
-          worstCaseTempo = Math.min(worstCaseTempo, -1000);
-          continue;
+          ai.row = savedAiRow; ai.col = savedAiCol;
+          return -5000;
         }
 
         const opDist = (findShortestPath(om.row, om.col, playerGoal) || []).length || 999;
 
-        let tempo;
         if (depth >= 3) {
+          // 3手先: 相手応答後 → AIの2手目まで読む
           const aiMoves2 = getValidMoves(2);
-          let bestAi2Tempo = -Infinity;
+          let bestAi2Dist = 999;
           for (const am of aiMoves2) {
+            if (am.row === 0) { bestAi2Dist = 1; break; }
             const savedAi2Row = ai.row, savedAi2Col = ai.col;
             ai.row = am.row; ai.col = am.col;
-            if (am.row === 0) {
-              ai.row = savedAi2Row; ai.col = savedAi2Col;
-              bestAi2Tempo = 1000;
-              break;
-            }
-            const aiDist2 = (findShortestPath(am.row, am.col, 0) || []).length || 999;
-            const t = opDist - aiDist2;
-            if (t > bestAi2Tempo) bestAi2Tempo = t;
+            const d = (findShortestPath(am.row, am.col, 0) || []).length || 999;
             ai.row = savedAi2Row; ai.col = savedAi2Col;
+            if (d < bestAi2Dist) bestAi2Dist = d;
           }
-          tempo = (aiMoves2.length > 0) ? bestAi2Tempo : opDist - myDist;
+          // 3手先テンポ: 相手のこの応答に対するAIの最善2手目の結果
+          const tempo3 = opDist - bestAi2Dist;
+          if (opDist < bestOpDist) bestOpDist = opDist;
         } else {
-          const myDist2 = (findShortestPath(ai.row, ai.col, 0) || []).length || 999;
-          tempo = opDist - myDist2;
+          if (opDist < bestOpDist) bestOpDist = opDist;
         }
 
-        if (tempo < worstCaseTempo) worstCaseTempo = tempo;
         player.row = savedOpRow; player.col = savedOpCol;
       }
-      if (opMoves.length === 0) worstCaseTempo = 999 - myDist;
 
       ai.row = savedAiRow; ai.col = savedAiCol;
 
-      // === 攻守両立スコアリング ===
-      // 攻撃: ゴールへの前進度（距離が短いほど高い）
-      const advanceScore = (BOARD_SIZE - myDist) * 8;
-      // 防御: テンポ（相手より有利な位置取り）
-      const tempoScore = worstCaseTempo * 6;
-      // 位置取りブロック: この移動で相手の経路が伸びたらボーナス
-      const opDistAfter = (findShortestPath(player.row, player.col, playerGoal) || []).length || 999;
-      const blockBonus = Math.max(0, opDistAfter - opDistBefore) * 5;
+      // === スコアリング ===
+      // 1. 最短経路前進ボーナス（最重要: 前進=+40, 横=0, 後退=-40）
+      const advanceBonus = advanceGain * 40;
 
-      return advanceScore + tempoScore + blockBonus;
+      // 2. 絶対距離（ゴールに近いほど良い、1マスあたり5点）
+      const distScore = (BOARD_SIZE - newDist) * 5;
+
+      // 3. テンポ差（相手が遠い - 自分が近い = 有利）
+      const tempo = bestOpDist - newDist;
+      const tempoScore = tempo * 8;
+
+      return advanceBonus + distScore + tempoScore;
     }
 
-    // ボスねこ+専用: 壁のスコアリング（相手応答込み + 学習データ + 壁温存考慮）
+    // 壁のスコアリング（scoreMoveNPlyと同じスケールで比較可能）
+    // 壁を置く = 1ターン移動を犠牲にして相手の経路を伸ばす
+    // スコア = (相手遅延のテンポ効果) - (移動を犠牲にした機会コスト)
     function scoreLearnedBestWall(ai, player, aiDist, playerDist) {
       const walls = getValidWallPlacements();
       if (walls.length === 0) return null;
 
       const playerGoal = BOARD_SIZE - 1;
       const currentPlayerPath = findShortestPath(player.row, player.col, playerGoal);
-      const currentTempo = playerDist - aiDist;
 
       // 相手の現在経路のエッジセット（直撃判定用）
       const playerEdgeSet = new Set();
@@ -717,6 +657,24 @@ const BOARD_SIZE = 7;
           playerEdgeSet.add(`${edgeRow},${edgeCol}`);
         }
       }
+
+      // === 移動の機会コスト（壁を置く代わりに最短経路を進んだ場合の価値） ===
+      // scoreMoveNPlyのadvanceBonusと同スケール: 1歩前進 = 40点
+      const bestMoveScore = (() => {
+        const moves = getValidMoves(2);
+        let best = -Infinity;
+        for (const m of moves) {
+          if (m.row === 0) return 10000; // ゴール可能なら壁は置かない
+          const d = (findShortestPath(m.row, m.col, 0) || []).length || 999;
+          const gain = aiDist - d;
+          const s = gain * 40 + (BOARD_SIZE - d) * 5;
+          if (s > best) best = s;
+        }
+        return best;
+      })();
+
+      // ゴール可能なら壁を置かない
+      if (bestMoveScore >= 10000) return null;
 
       let bestWall = null;
       let bestScore = -Infinity;
@@ -736,47 +694,38 @@ const BOARD_SIZE = 7;
         const playerIncrease = newPlayerDist - playerDist;
         const aiIncrease = newAiDist - aiDist;
 
-        // 基本スコア: 相手遅延 - 自分遅延
-        let score = playerIncrease * 4 - aiIncrease * 3;
+        // 相手の経路が伸びない壁は無価値 → スキップ
+        if (playerIncrease <= 0) continue;
 
-        // 相手の最善応答を先読み（壁を置いた後、相手が最善移動した場合のテンポ）
-        gameState.walls.push({ ...wall, owner: 2 });
-        const opMoves = getValidMoves(1);
-        let bestOpResponseDist = newPlayerDist;
-        for (const om of opMoves) {
-          const savedOpRow = player.row, savedOpCol = player.col;
-          player.row = om.row; player.col = om.col;
-          const opPath = findShortestPath(om.row, om.col, playerGoal);
-          player.row = savedOpRow; player.col = savedOpCol;
-          const d = opPath ? opPath.length : 999;
-          if (d < bestOpResponseDist) bestOpResponseDist = d;
-        }
-        gameState.walls.pop();
-
-        // 壁を置いた後、相手が1手進んでもまだ遅延効果があるかを評価
-        const effectiveIncrease = bestOpResponseDist - (playerDist - 1);
-        if (effectiveIncrease > 0) score += effectiveIncrease * 3;
-
-        // 経路直撃ボーナス
+        // === 壁スコア（scoreMoveNPlyと同じスケール） ===
+        // 相手を1歩遅延 ≈ テンポ+1 ≈ 8点(tempoScore相当)
+        // ただし相手の最短経路を直撃した壁は効果が高い
+        let isDirectHit = false;
         if (playerEdgeSet.size > 0) {
           const edges = getBlockedEdges(wall);
           for (const e of edges) {
             if (playerEdgeSet.has(`${e.row},${e.col}`)) {
-              score += playerIncrease * 2;
+              isDirectHit = true;
               break;
             }
           }
         }
 
-        // 学習データボーナス（大きめに反映）
+        // 壁の効果 = 相手遅延テンポ - 自分への悪影響
+        const delayValue = playerIncrease * (isDirectHit ? 15 : 8);
+        const selfPenalty = aiIncrease * 10;
+        let score = delayValue - selfPenalty;
+
+        // 壁を置くと1ターン移動できない → 機会コストを引く
+        score -= bestMoveScore;
+
+        // 学習データボーナス（補助的）
         const key = `${wall.cornerRow},${wall.cornerCol},${wall.orientation}`;
         const learnScore = aiLearningData.goodWallPositions[key] || 0;
-        if (learnScore > 0) {
-          score += Math.min(learnScore / 300, 8);
-        }
+        if (learnScore > 0) score += Math.min(learnScore / 300, 5);
 
-        // 壁温存ペナルティ: 残り少ないときは本当に効果的な壁だけ使う
-        if (ai.walls <= 2 && playerIncrease < 2) score -= 5;
+        // 壁温存: 残り少ないときは高効果の壁だけ
+        if (ai.walls <= 2 && playerIncrease < 2) score -= 20;
 
         if (score > bestScore) {
           bestScore = score;
@@ -785,28 +734,11 @@ const BOARD_SIZE = 7;
       }
 
       if (!bestWall || bestScore <= 0) return null;
-
-      // === 機会コスト: 壁を置く代わりに移動した場合の価値と比較 ===
-      // 壁を置くと1ターン移動できないので、移動した場合の前進量を計算
-      const moves = getValidMoves(2);
-      let bestMoveGain = 0;
-      for (const m of moves) {
-        const movePath = findShortestPath(m.row, m.col, 0);
-        const moveDist = movePath ? movePath.length : 999;
-        const gain = aiDist - moveDist; // 前進したセル数
-        if (gain > bestMoveGain) bestMoveGain = gain;
-      }
-      // 移動の機会コスト（前進1歩 ≈ スコア8相当、scoreMoveNPlyのadvanceScoreと同等）
-      const moveCost = bestMoveGain * 8;
-      // 自分がゴール近い場合は移動の価値がさらに上がる
-      const urgencyBonus = aiDist <= 3 ? (4 - aiDist) * 5 : 0;
-      bestScore -= (moveCost + urgencyBonus);
-
-      if (bestScore <= 0) return null;
       return { wall: bestWall, score: bestScore };
     }
 
-    // ボスねこ+専用: カード使用のテンポスコア評価
+    // カード使用評価: 前進に直結するカードのみ使用
+    // カードを使う = 1ターン消費 → 通常移動より明確に良い場合だけ
     function scoreCardActions(ai, player, aiDist, playerDist) {
       if (ai.totalCardsUsed >= MAX_CARDS_PER_PLAYER) return null;
       const usedCard = (id) => (ai.cardsUsed[id] || 0) >= 1;
@@ -814,90 +746,67 @@ const BOARD_SIZE = 7;
       let bestCard = null;
       let bestScore = -Infinity;
 
-      // freeze: 相手を1ターン停止 → 実質テンポ+1
-      if (!usedCard('freeze') && gameState.turn >= 2) {
-        // 相手が近いほど効果大
-        let score = 0;
-        if (playerDist <= 2) score = 50;       // 緊急防御
-        else if (playerDist <= 4) score = 25;
-        else if (playerDist <= 6) score = 10;
-        if (score > bestScore) { bestScore = score; bestCard = { type: 'card', cardId: 'freeze' }; }
-      }
-
-      // dash: 2マス移動 → テンポ+1
+      // dash: 2マス移動 → 通常移動より1歩多く前進できる
+      // 通常移動1歩=40点、dash2歩=80点 → 差が40点あるので強い
       if (!usedCard('dash') && hasDashTargetFor(2)) {
         const dashTarget = getBestDashTarget(2);
         if (dashTarget) {
-          const dashPath = findShortestPath(dashTarget.row, dashTarget.col, 0);
-          const dashDist = dashPath ? dashPath.length : 999;
+          const dashDist = (findShortestPath(dashTarget.row, dashTarget.col, 0) || []).length || 999;
           const gain = aiDist - dashDist;
-          if (gain >= 1) {
-            // ゴールに近いほどダッシュの価値が高い
-            const score = gain * 10 + (dashDist <= 2 ? 30 : 0);
+          if (gain >= 2) {
+            // 2歩以上前進できる場合のみ使用（1歩なら通常移動と同じ）
+            const score = gain * 40 + (BOARD_SIZE - dashDist) * 5;
             if (score > bestScore) { bestScore = score; bestCard = { type: 'card', cardId: 'dash' }; }
           }
         }
       }
 
-      // swap: 位置入れ替え（マンハッタン距離≤2かつ3ターン目以降）
+      // swap: 位置入れ替え → 自分が大幅に前進できるなら使う
       if (!usedCard('swap') && gameState.turn >= 3) {
         const swapDist = Math.abs(ai.row - player.row) + Math.abs(ai.col - player.col);
         if (swapDist <= 2) {
-          const swappedAiPath = findShortestPath(player.row, player.col, 0);
-          const swappedAiDist = swappedAiPath ? swappedAiPath.length : 999;
-          const swappedPlayerPath = findShortestPath(ai.row, ai.col, playerGoal);
-          const swappedPlayerDist = swappedPlayerPath ? swappedPlayerPath.length : 999;
+          const swappedAiDist = (findShortestPath(player.row, player.col, 0) || []).length || 999;
           const myGain = aiDist - swappedAiDist;
-          const opLoss = swappedPlayerDist - playerDist;
-          const totalGain = myGain + opLoss;
-          if (totalGain >= 2) {
-            const score = totalGain * 8;
+          if (myGain >= 2) {
+            // 自分が2歩以上前進できるなら使う（前進度×40で移動と同スケール比較）
+            const score = myGain * 40 + (BOARD_SIZE - swappedAiDist) * 5;
             if (score > bestScore) { bestScore = score; bestCard = { type: 'card', cardId: 'swap' }; }
           }
         }
       }
 
-      // jump: 飛び越え
+      // jump: 飛び越え → 前進できるなら使う
       if (!usedCard('jump') && isAdjacentFor(2) && canJumpOverFor(2)) {
         const jumpTarget = getJumpTarget(2);
         if (jumpTarget && jumpTarget.row >= 0 && jumpTarget.row < BOARD_SIZE) {
-          const jumpPath = findShortestPath(jumpTarget.row, jumpTarget.col, 0);
-          const jumpDist = jumpPath ? jumpPath.length : 999;
+          const jumpDist = (findShortestPath(jumpTarget.row, jumpTarget.col, 0) || []).length || 999;
           const gain = aiDist - jumpDist;
-          if (gain >= 1) {
-            const score = gain * 10;
+          if (gain >= 2) {
+            const score = gain * 40 + (BOARD_SIZE - jumpDist) * 5;
             if (score > bestScore) { bestScore = score; bestCard = { type: 'card', cardId: 'jump' }; }
           }
         }
       }
 
-      // push: 相手を押す
+      // push: 相手を押す + 自分がその位置に入る → 前進できるなら使う
       if (!usedCard('push') && isAdjacentFor(2) && canPushFor(2)) {
         const dr = player.row - ai.row, dc = player.col - ai.col;
         const pushDest = { row: player.row + dr, col: player.col + dc };
         if (pushDest.row >= 0 && pushDest.row < BOARD_SIZE && pushDest.col >= 0 && pushDest.col < BOARD_SIZE) {
-          const pushPlayerPath = findShortestPath(pushDest.row, pushDest.col, playerGoal);
-          const pushPlayerDist = pushPlayerPath ? pushPlayerPath.length : 999;
-          const aiToPlayerPos = findShortestPath(player.row, player.col, 0);
-          const aiNewDist = aiToPlayerPos ? aiToPlayerPos.length : 999;
+          // pushするとAIが相手の位置に移動
+          const aiNewDist = (findShortestPath(player.row, player.col, 0) || []).length || 999;
           const myGain = aiDist - aiNewDist;
-          const opLoss = pushPlayerDist - playerDist;
-          const totalGain = myGain + opLoss;
-          if (totalGain >= 1) {
-            const score = totalGain * 8;
+          if (myGain >= 1) {
+            // 前進 + 相手を押し戻す効果
+            const pushPlayerDist = (findShortestPath(pushDest.row, pushDest.col, playerGoal) || []).length || 999;
+            const opLoss = pushPlayerDist - playerDist;
+            const score = myGain * 40 + Math.max(0, opLoss) * 8 + (BOARD_SIZE - aiNewDist) * 5;
             if (score > bestScore) { bestScore = score; bestCard = { type: 'card', cardId: 'push' }; }
           }
         }
       }
 
-      // wallplus: 壁補充
-      if (!usedCard('wallplus') && ai.walls <= 1 && gameState.turn < 40) {
-        // 壁の価値は相手との距離差と残りターン数で判断
-        if (playerDist <= aiDist + 2) {
-          const score = 12;
-          if (score > bestScore) { bestScore = score; bestCard = { type: 'card', cardId: 'wallplus' }; }
-        }
-      }
+      // freeze, wallplus: 使わない（1ターン消費して前進しないカードは弱い）
 
       if (!bestCard) return null;
       return { action: bestCard, score: bestScore };
