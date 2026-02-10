@@ -1778,9 +1778,10 @@ const BOARD_SIZE = 7;
     function aiExecuteJump() {
       const ai = gameState.players[2];
       const target = getJumpTarget(2);
+      const fromR = ai.row, fromC = ai.col;
 
       showCardEffect('jump', () => {
-        animateJump(ai, target, () => {
+        animateJump(fromR, fromC, target.row, target.col, 2, () => {
           ai.row = target.row;
           ai.col = target.col;
           useCard();
@@ -1799,9 +1800,10 @@ const BOARD_SIZE = 7;
       const dc = player.col - ai.col;
       const pushTarget = { row: player.row + dr, col: player.col + dc };
       const aiTarget = { row: player.row, col: player.col };
+      const pushDir = [dr, dc];
 
       showCardEffect('push', () => {
-        animatePush(ai, player, pushTarget, () => {
+        animatePush(2, pushDir, () => {
           player.row = pushTarget.row;
           player.col = pushTarget.col;
           ai.row = aiTarget.row;
