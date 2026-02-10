@@ -877,6 +877,226 @@
     }
 
     /* カード使用演出 */
+
+    /* === カード配布モード選択 & ドラフト画面 === */
+    .card-mode-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 400;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .card-mode-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .card-mode-modal {
+      background: rgba(255,255,255,0.95);
+      border-radius: 20px;
+      padding: 24px 20px;
+      max-width: 360px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    .card-mode-modal h2 {
+      font-size: 1.3rem;
+      color: #5d4e37;
+      margin-bottom: 16px;
+    }
+    .card-mode-btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 14px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .card-mode-btn:active { transform: scale(0.97); }
+    .card-mode-btn.choose {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+      box-shadow: 0 4px 15px rgba(245,87,108,0.4);
+    }
+    .card-mode-btn.random {
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      color: white;
+      box-shadow: 0 4px 15px rgba(79,172,254,0.4);
+    }
+    .card-mode-btn .btn-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+    .card-mode-btn .btn-sub { font-size: 0.75rem; opacity: 0.85; display: block; margin-top: 2px; }
+    .card-mode-back {
+      margin-top: 14px;
+      background: none;
+      border: 1px solid #aaa;
+      border-radius: 10px;
+      padding: 8px 20px;
+      color: #666;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    /* ドラフト（カード選択）画面 */
+    .card-draft-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, #2d3436 0%, #000000 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 410;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .card-draft-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .card-draft-modal {
+      background: rgba(255,255,255,0.95);
+      border-radius: 20px;
+      padding: 20px 16px;
+      max-width: 380px;
+      width: 95%;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .card-draft-modal h2 {
+      font-size: 1.2rem;
+      color: #5d4e37;
+      margin-bottom: 6px;
+    }
+    .draft-warning {
+      font-size: 0.85rem;
+      color: #e74c3c;
+      font-weight: bold;
+      margin-bottom: 10px;
+      padding: 6px;
+      background: #ffeef0;
+      border-radius: 8px;
+    }
+    .draft-count {
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      margin-bottom: 10px;
+    }
+    .draft-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .draft-card {
+      background: linear-gradient(145deg, #fff, #f0f0f0);
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      padding: 10px 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .draft-card:active { transform: scale(0.95); }
+    .draft-card.selected {
+      border-color: #e74c3c;
+      background: linear-gradient(145deg, #fff5f5, #ffe0e0);
+      box-shadow: 0 0 12px rgba(231,76,60,0.3);
+    }
+    .draft-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 4px; right: 6px;
+      color: #e74c3c;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+    .draft-card .draft-num {
+      font-size: 0.7rem;
+      color: #aaa;
+      margin-bottom: 2px;
+    }
+    .draft-card .draft-icon { font-size: 1.6rem; }
+    .draft-card .draft-name { font-size: 0.75rem; font-weight: bold; color: #333; margin-top: 2px; }
+    .draft-card .draft-desc { font-size: 0.6rem; color: #888; margin-top: 2px; }
+    .draft-confirm-btn {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 30px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      opacity: 0.4;
+      pointer-events: none;
+      transition: all 0.2s;
+    }
+    .draft-confirm-btn.ready {
+      opacity: 1;
+      pointer-events: auto;
+      box-shadow: 0 4px 15px rgba(245,87,108,0.4);
+    }
+
+    /* 手渡し画面 */
+    .handoff-screen {
+      text-align: center;
+    }
+    .handoff-screen .handoff-cat {
+      font-size: 3rem;
+      margin: 10px 0;
+    }
+    .handoff-screen .handoff-msg {
+      font-size: 1rem;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .handoff-screen .handoff-secret {
+      font-size: 0.85rem;
+      color: #e74c3c;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+    .handoff-btn {
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+      border: none;
+      border-radius: 14px;
+      padding: 14px 40px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #5d4e37;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    /* ランダム配布結果画面 */
+    .random-cards-display {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 12px 0;
+    }
+    .random-card-item {
+      background: linear-gradient(145deg, #fff, #f8f8f8);
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 8px 10px;
+      text-align: center;
+      min-width: 70px;
+    }
+    .random-card-item .draft-icon { font-size: 1.4rem; }
+    .random-card-item .draft-name { font-size: 0.7rem; font-weight: bold; color: #333; margin-top: 2px; }
+
     .card-effect-overlay {
       position: fixed;
       top: 0;
@@ -1728,6 +1948,29 @@
       </div>
       <div class="ai-thinking-text">かんがえちゅう</div>
     </div>
+  </div>
+
+  <!-- カード配布モード選択画面（二人対戦用） -->
+  <div class="card-mode-overlay" id="card-mode-select">
+    <div class="card-mode-modal">
+      <h2>🎴 カードのくばりかた</h2>
+      <button class="card-mode-btn choose" onclick="startCardDraft('choose')">
+        <span class="btn-icon">🎯</span>
+        えらんで たたかう
+        <span class="btn-sub">すきなカードを3まい えらぼう</span>
+      </button>
+      <button class="card-mode-btn random" onclick="startCardDraft('random')">
+        <span class="btn-icon">🎲</span>
+        ランダムに くばる
+        <span class="btn-sub">3まい ランダムで くばられるよ</span>
+      </button>
+      <button class="card-mode-back" onclick="backFromCardMode()">← もどる</button>
+    </div>
+  </div>
+
+  <!-- カードドラフト画面 -->
+  <div class="card-draft-overlay" id="card-draft">
+    <div class="card-draft-modal" id="card-draft-modal"></div>
   </div>
 
   <!-- ゲーム画面 -->
