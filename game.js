@@ -34,6 +34,9 @@ const BOARD_SIZE = 7;
     // ゲームモード設定
     let gameMode = 'pvp'; // 'pvp' or 'ai'
     let aiDifficulty = 'easy'; // 'easy', 'medium', 'hard'
+    let cardDistMode = 'all'; // 'all'(従来), 'choose'(選択), 'random'(ランダム)
+    // 手札: null=全カード使える(従来/AI), 配列=その手札のみ
+    let playerHands = { 1: null, 2: null };
 
     // AI学習データ（事前学習済み - 1000戦でAIが889勝）
     // AIはプレイヤー（ちゃとら）が下の白マスに行くのを妨害する壁を学習
@@ -225,6 +228,8 @@ const BOARD_SIZE = 7;
       document.getElementById('mode-select').classList.remove('hidden');
       document.getElementById('ai-select').classList.add('hidden');
       document.getElementById('game-container').classList.add('hidden');
+      document.getElementById('card-mode-select').classList.remove('show');
+      document.getElementById('card-draft').classList.remove('show');
     }
 
     function showAISelect() {
@@ -235,29 +240,200 @@ const BOARD_SIZE = 7;
     function startGame(mode, difficulty = 'easy') {
       gameMode = mode;
       aiDifficulty = difficulty;
-      
+
+      if (mode === 'pvp') {
+        // 二人対戦 → カード配布モード選択を表示
+        document.getElementById('mode-select').classList.add('hidden');
+        document.getElementById('card-mode-select').classList.add('show');
+        return;
+      }
+
+      // AI対戦 → 従来通り全カード使用可能
+      cardDistMode = 'all';
+      playerHands = { 1: null, 2: null };
+      launchGame();
+    }
+
+    function launchGame() {
       document.getElementById('mode-select').classList.add('hidden');
       document.getElementById('ai-select').classList.add('hidden');
+      document.getElementById('card-mode-select').classList.remove('show');
+      document.getElementById('card-draft').classList.remove('show');
       document.getElementById('game-container').classList.remove('hidden');
-      
-      if (mode === 'ai') {
+
+      if (gameMode === 'ai') {
         document.getElementById('game-container').classList.add('ai-mode');
-        // くろねこの名前をAI名に
-        let aiName = difficulty === 'easy' ? 'こねこ' : difficulty === 'medium' ? 'おとなねこ' : 'ボスねこ';
-        if (difficulty === 'hard' && aiLearningData.trained) {
+        let aiName = aiDifficulty === 'easy' ? 'こねこ' : aiDifficulty === 'medium' ? 'おとなねこ' : 'ボスねこ';
+        if (aiDifficulty === 'hard' && aiLearningData.trained) {
           aiName = 'ボスねこ+';
         }
-        document.querySelector('#player2-info .player-name').textContent = 
-          `⬆️ ${aiName} ${AI_FACES[difficulty]}`;
+        document.querySelector('#player2-info .player-name').textContent =
+          `⬆️ ${aiName} ${AI_FACES[aiDifficulty]}`;
       } else {
         document.getElementById('game-container').classList.remove('ai-mode');
         document.querySelector('#player2-info .player-name').textContent = '⬆️ くろねこ 🐈‍⬛';
       }
-      
+
       resetGame();
     }
 
     // AI思考表示
+    // ============================================================
+    // === カード配布システム（二人対戦用） ===
+    // ============================================================
+
+    function backFromCardMode() {
+      document.getElementById('card-mode-select').classList.remove('show');
+      document.getElementById('mode-select').classList.remove('hidden');
+    }
+
+    function startCardDraft(mode) {
+      cardDistMode = mode;
+      document.getElementById('card-mode-select').classList.remove('show');
+
+      if (mode === 'random') {
+        // ランダム配布
+        const allIds = SKILL_CARDS.map(c => c.id);
+        playerHands[1] = shuffleArray(allIds).slice(0, 3);
+        playerHands[2] = shuffleArray(allIds).slice(0, 3);
+        // P1に手札を見せる → P2に手札を見せる → ゲーム開始
+        showRandomResult(1);
+      } else {
+        // 選んで戦う → P1の手渡し画面
+        playerHands = { 1: [], 2: [] };
+        showHandoff(1);
+      }
+    }
+
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // === 手渡し画面: 「相手は見ないで！」 ===
+    function showHandoff(playerNum) {
+      const modal = document.getElementById('card-draft-modal');
+      const name = playerNum === 1 ? 'ちゃとら 🐈' : 'くろねこ 🐈‍⬛';
+      const otherName = playerNum === 1 ? 'くろねこ' : 'ちゃとら';
+      modal.innerHTML = `
+        <div class="handoff-screen">
+          <div class="handoff-cat">${playerNum === 1 ? '🐈' : '🐈‍⬛'}</div>
+          <div class="handoff-msg">${name} がカードを えらぶばん！</div>
+          <div class="handoff-secret">🙈 ${otherName} は みないでね！</div>
+          <button class="handoff-btn" onclick="showDraftGrid(${playerNum})">じゅんび OK！</button>
+        </div>
+      `;
+      document.getElementById('card-draft').classList.add('show');
+    }
+
+    // === ドラフト選択画面: 9枚から3枚選ぶ ===
+    let draftSelected = [];
+    let draftPlayerNum = 0;
+
+    function showDraftGrid(playerNum) {
+      draftSelected = [];
+      draftPlayerNum = playerNum;
+      renderDraftGrid();
+    }
+
+    function renderDraftGrid() {
+      const modal = document.getElementById('card-draft-modal');
+      const name = draftPlayerNum === 1 ? 'ちゃとら 🐈' : 'くろねこ 🐈‍⬛';
+      const count = draftSelected.length;
+
+      let html = `
+        <h2>${name} のカードを えらぼう</h2>
+        <div class="draft-warning">🙈 あいては みないでね！</div>
+        <div class="draft-count">えらんだ数: <strong>${count}</strong> / 3</div>
+        <div class="draft-grid">
+      `;
+
+      SKILL_CARDS.forEach((card, idx) => {
+        const isSelected = draftSelected.includes(card.id);
+        html += `
+          <div class="draft-card${isSelected ? ' selected' : ''}" onclick="toggleDraftCard('${card.id}')">
+            <div class="draft-num">${idx + 1}番</div>
+            <div class="draft-icon">${card.icon}</div>
+            <div class="draft-name">${card.name}</div>
+            <div class="draft-desc">${card.desc}</div>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      html += `<button class="draft-confirm-btn${count === 3 ? ' ready' : ''}" onclick="confirmDraft()">これで けってい！</button>`;
+      modal.innerHTML = html;
+    }
+
+    function toggleDraftCard(cardId) {
+      const idx = draftSelected.indexOf(cardId);
+      if (idx >= 0) {
+        draftSelected.splice(idx, 1);
+      } else if (draftSelected.length < 3) {
+        draftSelected.push(cardId);
+      }
+      renderDraftGrid();
+    }
+
+    function confirmDraft() {
+      if (draftSelected.length !== 3) return;
+      playerHands[draftPlayerNum] = [...draftSelected];
+
+      if (draftPlayerNum === 1) {
+        // P1完了 → P2の手渡し画面へ
+        showHandoff(2);
+      } else {
+        // P2完了 → ゲーム開始
+        document.getElementById('card-draft').classList.remove('show');
+        launchGame();
+      }
+    }
+
+    // === ランダム配布結果表示 ===
+    function showRandomResult(playerNum) {
+      const modal = document.getElementById('card-draft-modal');
+      const name = playerNum === 1 ? 'ちゃとら 🐈' : 'くろねこ 🐈‍⬛';
+      const otherName = playerNum === 1 ? 'くろねこ' : 'ちゃとら';
+      const hand = playerHands[playerNum];
+
+      let cardsHtml = '<div class="random-cards-display">';
+      hand.forEach((cardId, i) => {
+        const card = SKILL_CARDS.find(c => c.id === cardId);
+        cardsHtml += `
+          <div class="random-card-item">
+            <div class="draft-num">${i + 1}番</div>
+            <div class="draft-icon">${card.icon}</div>
+            <div class="draft-name">${card.name}</div>
+          </div>
+        `;
+      });
+      cardsHtml += '</div>';
+
+      modal.innerHTML = `
+        <div class="handoff-screen">
+          <div class="handoff-cat">${playerNum === 1 ? '🐈' : '🐈‍⬛'}</div>
+          <div class="handoff-msg">${name} のカード</div>
+          <div class="handoff-secret">🙈 ${otherName} は みないでね！</div>
+          ${cardsHtml}
+          <button class="handoff-btn" onclick="nextRandomResult(${playerNum})">OK！</button>
+        </div>
+      `;
+      document.getElementById('card-draft').classList.add('show');
+    }
+
+    function nextRandomResult(playerNum) {
+      if (playerNum === 1) {
+        showRandomResult(2);
+      } else {
+        document.getElementById('card-draft').classList.remove('show');
+        launchGame();
+      }
+    }
+
     function showAIThinking() {
       const overlay = document.getElementById('ai-thinking');
       document.getElementById('ai-thinking-cat').textContent = AI_FACES[aiDifficulty];
@@ -1778,9 +1954,10 @@ const BOARD_SIZE = 7;
     function aiExecuteJump() {
       const ai = gameState.players[2];
       const target = getJumpTarget(2);
+      const fromR = ai.row, fromC = ai.col;
 
       showCardEffect('jump', () => {
-        animateJump(ai, target, () => {
+        animateJump(fromR, fromC, target.row, target.col, 2, () => {
           ai.row = target.row;
           ai.col = target.col;
           useCard();
@@ -1799,9 +1976,10 @@ const BOARD_SIZE = 7;
       const dc = player.col - ai.col;
       const pushTarget = { row: player.row + dr, col: player.col + dc };
       const aiTarget = { row: player.row, col: player.col };
+      const pushDir = [dr, dc];
 
       showCardEffect('push', () => {
-        animatePush(ai, player, pushTarget, () => {
+        animatePush(2, pushDir, () => {
           player.row = pushTarget.row;
           player.col = pushTarget.col;
           ai.row = aiTarget.row;
@@ -2923,20 +3101,26 @@ const BOARD_SIZE = 7;
 
     function openCardModal() {
       const player = gameState.players[gameState.currentPlayer];
+      const hand = playerHands[gameState.currentPlayer];
 
-      // 2枚使い切っていたら使えない
-      if (player.totalCardsUsed >= MAX_CARDS_PER_PLAYER) {
+      // 手札制限: hand が配列なら手札枚数が上限、nullなら従来通りMAX_CARDS_PER_PLAYER
+      const maxCards = hand ? hand.length : MAX_CARDS_PER_PLAYER;
+      if (player.totalCardsUsed >= maxCards) {
         showToast('カードはもう使えないよ！', 'warn');
         return;
       }
 
+      // 手札があればそのカードのみ、なければ全カード
+      const availableCards = hand
+        ? SKILL_CARDS.filter(c => hand.includes(c.id))
+        : SKILL_CARDS;
+
       const grid = document.getElementById('card-grid');
       grid.innerHTML = '';
 
-      // 使用可能なカードがあるかチェック
       let hasAvailableCard = false;
 
-      SKILL_CARDS.forEach(card => {
+      availableCards.forEach(card => {
         const cardEl = document.createElement('div');
         cardEl.className = 'skill-card';
 
@@ -2946,7 +3130,6 @@ const BOARD_SIZE = 7;
 
         if (!canUse) {
           cardEl.classList.add('disabled');
-          // 使用回数が残っているが条件不成立の場合は「available」を追加（::afterで「使用済」を表示しない）
           if (canUseMore) cardEl.classList.add('available');
         }
         if (canUse) hasAvailableCard = true;
@@ -2988,7 +3171,7 @@ const BOARD_SIZE = 7;
       // スクロールヒント（カードが多い場合）
       const existingHint = grid.parentNode.querySelector('.scroll-hint');
       if (existingHint) existingHint.remove();
-      if (SKILL_CARDS.length > 6) {
+      if (availableCards.length > 6) {
         const hint = document.createElement('div');
         hint.className = 'scroll-hint';
         hint.textContent = '↓ スクロールして もっとみる';
@@ -2996,7 +3179,6 @@ const BOARD_SIZE = 7;
       }
 
       const cardModal = document.getElementById('card-modal');
-      // 対面モード時、プレイヤー1ならモーダルを回転
       cardModal.classList.toggle('rotated-for-p1', gameState.currentPlayer === 1 && gameMode !== 'ai');
       cardModal.classList.add('show');
     }
@@ -3787,24 +3969,40 @@ const BOARD_SIZE = 7;
       // カード使用状況をドット表示で更新
       const remaining1 = getRemainingCards(1);
       const remaining2 = getRemainingCards(2);
-      const used1 = MAX_CARDS_PER_PLAYER - remaining1;
-      const used2 = MAX_CARDS_PER_PLAYER - remaining2;
+      const max1 = playerHands[1] ? playerHands[1].length : MAX_CARDS_PER_PLAYER;
+      const max2 = playerHands[2] ? playerHands[2].length : MAX_CARDS_PER_PLAYER;
+      const used1 = max1 - remaining1;
+      const used2 = max2 - remaining2;
 
       const card1 = document.getElementById('card-status1');
       const card2 = document.getElementById('card-status2');
 
+      // 手札がある場合は「1番 2番 3番」で表示（相手に中身を見せない）
+      const handLabel = (pNum) => {
+        const hand = playerHands[pNum];
+        if (!hand) return '';
+        const p = gameState.players[pNum];
+        return '<div style="font-size:0.7em;margin-top:2px;color:#888;">' +
+          hand.map((cardId, i) => {
+            const isUsed = (p.cardsUsed[cardId] || 0) >= 1;
+            return isUsed ? `<s>${i+1}番</s>` : `${i+1}番`;
+          }).join(' ') + '</div>';
+      };
+
       card1.innerHTML = `🎴 カード: ${remaining1}枚` +
         (gameState.players[1].frozen ? ' <span class="frozen-badge">❄️ 足止め</span>' : '') +
+        handLabel(1) +
         '<div class="card-usage-bar">' +
-        Array.from({length: MAX_CARDS_PER_PLAYER}, (_, i) =>
+        Array.from({length: max1}, (_, i) =>
           `<span class="card-usage-dot${i < used1 ? ' used' : ''}"></span>`
         ).join('') + '</div>';
       card1.classList.toggle('used', remaining1 === 0);
 
       card2.innerHTML = `🎴 カード: ${remaining2}枚` +
         (gameState.players[2].frozen ? ' <span class="frozen-badge">❄️ 足止め</span>' : '') +
+        handLabel(2) +
         '<div class="card-usage-bar">' +
-        Array.from({length: MAX_CARDS_PER_PLAYER}, (_, i) =>
+        Array.from({length: max2}, (_, i) =>
           `<span class="card-usage-dot${i < used2 ? ' used' : ''}"></span>`
         ).join('') + '</div>';
       card2.classList.toggle('used', remaining2 === 0);
@@ -3848,7 +4046,9 @@ const BOARD_SIZE = 7;
 
     function getRemainingCards(playerNum) {
       const player = gameState.players[playerNum];
-      return MAX_CARDS_PER_PLAYER - player.totalCardsUsed;
+      const hand = playerHands[playerNum];
+      const maxCards = hand ? hand.length : MAX_CARDS_PER_PLAYER;
+      return maxCards - player.totalCardsUsed;
     }
 
     function resetGame() {
