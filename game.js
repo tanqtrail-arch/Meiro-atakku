@@ -4433,6 +4433,20 @@ const BOARD_SIZE = 7;
           retryBtn.onclick = () => { cleanupStageButtons(); resetGame(); };
           winnerModal.appendChild(retryBtn);
 
+          // キャラ変更して再挑戦ボタン
+          const changeBtn = document.createElement('button');
+          changeBtn.className = 'btn-reset';
+          changeBtn.id = 'stage-change-btn';
+          changeBtn.style.marginTop = '10px';
+          changeBtn.style.background = 'linear-gradient(145deg, #6c5ce7 0%, #a29bfe 100%)';
+          changeBtn.textContent = '🐱 ネコをかえて 再挑戦';
+          changeBtn.onclick = () => {
+            cleanupStageButtons();
+            overlay.classList.remove('show');
+            startStageGame(currentStageIndex);
+          };
+          winnerModal.appendChild(changeBtn);
+
           const stageBtn = document.createElement('button');
           stageBtn.className = 'back-btn';
           stageBtn.id = 'stage-select-btn';
@@ -4464,7 +4478,7 @@ const BOARD_SIZE = 7;
     }
 
     function cleanupStageButtons() {
-      ['stage-next-btn', 'stage-retry-btn', 'stage-select-btn'].forEach(id => {
+      ['stage-next-btn', 'stage-retry-btn', 'stage-change-btn', 'stage-select-btn'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.remove();
       });
