@@ -30,7 +30,7 @@ const BOARD_SIZE = 7;
     const CHARACTER_CARDS = [
       // 🥷 にんじゃねこ
       { id: 'ninja_shinobi', icon: '🥷', name: '忍び足', desc: '斜め方向に1マス移動する（壁は越えられない）', actionType: 'move_act', character: 'ninja', limit: 1 },
-      { id: 'ninja_musasabi', icon: '🦅', name: 'ムササビの術', desc: '隣の相手を壁ごと飛び越えて移動する', actionType: 'move_act', character: 'ninja', limit: 1 },
+      { id: 'ninja_musasabi', icon: '🦅', name: 'ムササビの術', desc: '壁を無視して前方に2マス移動する', actionType: 'move_act', character: 'ninja', limit: 1 },
       { id: 'ninja_kawarimi', icon: '🍃', name: '変わり身の術', desc: '【カウンター】妨害を無効化して別のマスへ移動', actionType: 'counter', character: 'ninja', limit: 1 },
       // 💰 どろぼうねこ
       { id: 'thief_zurakaru', icon: '💨', name: 'ずらかる', desc: '横方向に1マス移動できる（壁を無視）', actionType: 'move_act', character: 'thief', limit: 1 },
@@ -100,28 +100,14 @@ const BOARD_SIZE = 7;
         id: 1, name: 'はじまりの迷路', stars: 1, desc: 'アイテムを ゲットしよう！💎',
         aiDifficulty: 'easy', bossType: null,
         playerWalls: 6, aiWalls: 6,
-        initialWalls: [
-          // 中盤に迷路風の壁配置
-          { cornerRow: 3, cornerCol: 5, orientation: 'h', owner: 0 },
-          { cornerRow: 5, cornerCol: 3, orientation: 'v', owner: 0 },
-          { cornerRow: 7, cornerCol: 7, orientation: 'h', owner: 0 },
-          { cornerRow: 9, cornerCol: 5, orientation: 'v', owner: 0 }
-        ],
+        initialWalls: [],
         specialCard: { id: 'stage_slide', row: 3, col: 3 }
       },
       {
         id: 2, name: 'かべの森', stars: 2, desc: 'かべだらけ！ みちを さがそう',
         aiDifficulty: 'medium', bossType: null,
         playerWalls: 6, aiWalls: 6,
-        initialWalls: [
-          // 左右交互に壁を配置して蛇行する迷路
-          { cornerRow: 3, cornerCol: 1, orientation: 'h', owner: 0 },
-          { cornerRow: 3, cornerCol: 5, orientation: 'h', owner: 0 },
-          { cornerRow: 5, cornerCol: 3, orientation: 'v', owner: 0 },
-          { cornerRow: 7, cornerCol: 7, orientation: 'h', owner: 0 },
-          { cornerRow: 7, cornerCol: 3, orientation: 'h', owner: 0 },
-          { cornerRow: 9, cornerCol: 5, orientation: 'v', owner: 0 }
-        ],
+        initialWalls: [],
         specialCard: null
       },
       {
@@ -129,28 +115,17 @@ const BOARD_SIZE = 7;
         aiDifficulty: 'medium', bossType: 'trickster',
         playerWalls: 6, aiWalls: 7,
         initialWalls: [
-          // ボスステージ：中央に十字型の壁
-          { cornerRow: 5, cornerCol: 5, orientation: 'h', owner: 0 },
-          { cornerRow: 5, cornerCol: 7, orientation: 'h', owner: 0 },
-          { cornerRow: 5, cornerCol: 5, orientation: 'v', owner: 0 },
-          { cornerRow: 7, cornerCol: 5, orientation: 'v', owner: 0 }
+          // ボスの城壁
+          { cornerRow: 3, cornerCol: 5, orientation: 'h', owner: 2 },
+          { cornerRow: 3, cornerCol: 7, orientation: 'v', owner: 2 }
         ],
-        specialCard: { id: 'stage_rotate', row: 3, col: 5 }
+        specialCard: { id: 'stage_rotate', row: 5, col: 5 }
       },
       {
         id: 4, name: 'やみの通路', stars: 4, desc: 'せまい みちを くぐりぬけろ！',
         aiDifficulty: 'medium', bossType: null,
         playerWalls: 6, aiWalls: 7,
-        initialWalls: [
-          // ジグザグ迷路：左右交互に壁を並べて通路を作る
-          { cornerRow: 3, cornerCol: 3, orientation: 'h', owner: 0 },
-          { cornerRow: 3, cornerCol: 7, orientation: 'v', owner: 0 },
-          { cornerRow: 5, cornerCol: 1, orientation: 'v', owner: 0 },
-          { cornerRow: 5, cornerCol: 9, orientation: 'h', owner: 0 },
-          { cornerRow: 7, cornerCol: 5, orientation: 'h', owner: 0 },
-          { cornerRow: 9, cornerCol: 3, orientation: 'v', owner: 0 },
-          { cornerRow: 9, cornerCol: 7, orientation: 'h', owner: 0 }
-        ],
+        initialWalls: [],
         specialCard: null
       },
       {
@@ -158,13 +133,10 @@ const BOARD_SIZE = 7;
         aiDifficulty: 'hard', bossType: 'queen',
         playerWalls: 6, aiWalls: 7,
         initialWalls: [
-          // 女王の城壁：ゴール前に防衛ライン + 中盤に迷路
+          // 女王の城壁：ゴール前に防衛ライン
           { cornerRow: 1, cornerCol: 3, orientation: 'h', owner: 2 },
           { cornerRow: 1, cornerCol: 7, orientation: 'h', owner: 2 },
-          { cornerRow: 3, cornerCol: 5, orientation: 'v', owner: 2 },
-          { cornerRow: 5, cornerCol: 3, orientation: 'h', owner: 0 },
-          { cornerRow: 7, cornerCol: 7, orientation: 'v', owner: 0 },
-          { cornerRow: 9, cornerCol: 5, orientation: 'h', owner: 0 }
+          { cornerRow: 3, cornerCol: 5, orientation: 'v', owner: 2 }
         ],
         specialCard: { id: 'stage_recover', row: 2, col: 1 }
       },
@@ -173,15 +145,10 @@ const BOARD_SIZE = 7;
         aiDifficulty: 'hard', bossType: 'demon',
         playerWalls: 6, aiWalls: 8,
         initialWalls: [
-          // 魔王の城：複雑な迷路で最も難しい
+          // 魔王の城壁
           { cornerRow: 1, cornerCol: 3, orientation: 'h', owner: 2 },
           { cornerRow: 1, cornerCol: 7, orientation: 'v', owner: 2 },
-          { cornerRow: 3, cornerCol: 5, orientation: 'h', owner: 2 },
-          { cornerRow: 5, cornerCol: 1, orientation: 'v', owner: 0 },
-          { cornerRow: 5, cornerCol: 9, orientation: 'v', owner: 0 },
-          { cornerRow: 7, cornerCol: 3, orientation: 'h', owner: 0 },
-          { cornerRow: 7, cornerCol: 7, orientation: 'h', owner: 0 },
-          { cornerRow: 9, cornerCol: 5, orientation: 'v', owner: 0 }
+          { cornerRow: 3, cornerCol: 5, orientation: 'h', owner: 2 }
         ],
         specialCard: null
       }
@@ -2144,10 +2111,12 @@ const BOARD_SIZE = 7;
       if (hasCard('electric_raiden') && aiDist <= 5) {
         return { type: 'card', cardId: 'electric_raiden' };
       }
-      // ムササビの術: 相手を飛び越え
-      if (hasCard('ninja_musasabi') && adjacent && canJumpOverFor(2)) {
-        const jt = getJumpTarget(2);
-        if (jt && jt.row < ai.row) return { type: 'card', cardId: 'ninja_musasabi' };
+      // ムササビの術: 壁無視で前方2マス
+      if (hasCard('ninja_musasabi') && aiDist <= 5) {
+        const targetRow = ai.row - 2;
+        if (targetRow >= 0 && !(targetRow === player.row && ai.col === player.col)) {
+          return { type: 'card', cardId: 'ninja_musasabi' };
+        }
       }
       // 忍び足: 斜め移動
       if (hasCard('ninja_shinobi') && aiDist <= 4) {
@@ -2523,8 +2492,11 @@ const BOARD_SIZE = 7;
           break;
         }
         case 'ninja_musasabi': {
-          const jt = getJumpTarget(2);
-          if (jt) doMove(jt.row, jt.col); else fallback();
+          // 壁を無視して前方2マス移動（AIは上方向）
+          const targetRow = ai.row - 2;
+          if (targetRow >= 0 && !(targetRow === player.row && ai.col === player.col)) {
+            doMove(targetRow, ai.col);
+          } else fallback();
           break;
         }
         case 'thief_zurakaru': {
@@ -3815,25 +3787,26 @@ const BOARD_SIZE = 7;
       }
 
       // === にんじゃねこ: ムササビの術（相手を飛び越える） ===
+      // === ムササビの術: 壁を無視して前方2マス移動 ===
       if (cardId === 'ninja_musasabi') {
-        const dr = boardRow - player.row;
-        const dc = boardCol - player.col;
-        if ((Math.abs(dr) === 2 && dc === 0) || (dr === 0 && Math.abs(dc) === 2)) {
-          const midRow = player.row + dr / 2;
-          const midCol = player.col + dc / 2;
-          if (midRow === other.row && midCol === other.col) {
-            // 壁を無視して飛び越える
-            saveHistory();
-            showCardEffect(cardId, () => {
-              player.row = boardRow;
-              player.col = boardCol;
-              useCard();
-              renderCats(pNum);
-              checkWin();
-              if (!gameState.gameOver) afterCardAction(cardId);
-            });
-            return;
-          }
+        const goalRow = pNum === 1 ? BOARD_SIZE - 1 : 0;
+        const forward = pNum === 1 ? 1 : -1;
+        const targetRow = player.row + forward * 2;
+        if (boardRow === targetRow && boardCol === player.col &&
+            targetRow >= 0 && targetRow < BOARD_SIZE &&
+            !(boardRow === other.row && boardCol === other.col)) {
+          saveHistory();
+          showCardEffect(cardId, () => {
+            player.row = boardRow;
+            player.col = boardCol;
+            checkSpecialCardPickup(boardRow, boardCol);
+            checkTrap(boardRow, boardCol);
+            useCard();
+            renderCats(pNum);
+            checkWin();
+            if (!gameState.gameOver) afterCardAction(cardId);
+          });
+          return;
         }
       }
 
@@ -4672,13 +4645,11 @@ const BOARD_SIZE = 7;
           });
         }
         case 'ninja_musasabi': {
-          // 壁を無視して飛び越え可能（着地先が盤面内ならOK）
-          if (!isAdjacentToOther()) return false;
-          const otherP = gameState.players[gameState.currentPlayer === 1 ? 2 : 1];
-          const playerP = gameState.players[gameState.currentPlayer];
-          const landR = otherP.row + (otherP.row - playerP.row);
-          const landC = otherP.col + (otherP.col - playerP.col);
-          return landR >= 0 && landR < BOARD_SIZE && landC >= 0 && landC < BOARD_SIZE;
+          // 壁を無視して前方2マス移動（着地先が盤面内で相手がいなければOK）
+          const forward = gameState.currentPlayer === 1 ? 1 : -1;
+          const targetR = player.row + forward * 2;
+          return targetR >= 0 && targetR < BOARD_SIZE &&
+                 !(targetR === other.row && player.col === other.col);
         }
         case 'ninja_kawarimi':
           return true; // カウンター（常に持てる）
@@ -5677,16 +5648,14 @@ const BOARD_SIZE = 7;
           }
         }
       }
-      // === ムササビの術: 相手を飛び越え（壁無視） ===
+      // === ムササビの術: 壁を無視して前方2マス ===
       else if (cardId === 'ninja_musasabi') {
-        const dr = other.row - player.row;
-        const dc = other.col - player.col;
-        if ((Math.abs(dr)+Math.abs(dc)) === 1) {
-          const landRow = other.row + dr;
-          const landCol = other.col + dc;
-          if (landRow>=0 && landRow<BOARD_SIZE && landCol>=0 && landCol<BOARD_SIZE) {
-            highlightFloor(landRow, landCol, 'highlight-special');
-          }
+        const pNum = gameState.currentPlayer;
+        const forward = pNum === 1 ? 1 : -1;
+        const targetRow = player.row + forward * 2;
+        if (targetRow >= 0 && targetRow < BOARD_SIZE &&
+            !(targetRow === other.row && player.col === other.col)) {
+          highlightFloor(targetRow, player.col, 'highlight-special');
         }
       }
       // === ずらかる: 横1マス（壁無視） ===
