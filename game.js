@@ -62,6 +62,111 @@ const BOARD_SIZE = 7;
       { id: 'construction_blast', icon: '🧨', name: '発破', desc: '盤上の壁を1枚選んで完全に破壊する', actionType: 'turn_end', character: 'construction', limit: 1 }
     ];
 
+    // ===== ステージモード用スペシャルカード =====
+    const SPECIAL_CARDS = [
+      { id: 'sp_dash', icon: '💨', name: 'かけあし', desc: '壁を無視して進行方向に2マス前進', actionType: 'move_act', character: 'special', limit: 1 },
+      { id: 'sp_wallbreak', icon: '🔨', name: '壁くずし', desc: '任意の壁を1枚破壊する', actionType: 'turn_end', character: 'special', limit: 1 },
+      { id: 'sp_anchor', icon: '⚓', name: '壁アンカー', desc: '自分の壁1枚を固定。移動・破壊が不可能になる', actionType: 'move_ok', character: 'special', limit: 1 },
+      { id: 'sp_teleport', icon: '✨', name: 'テレポート', desc: '盤面の任意の空きマスに瞬間移動', actionType: 'move_act', character: 'special', limit: 1 },
+      { id: 'sp_release', icon: '🔓', name: '解放', desc: 'フリーズ・壁配置禁止などの行動制限を即座に解除', actionType: 'move_act', character: 'special', limit: 1 }
+    ];
+
+    // ===== ボスタイプ定義 =====
+    const BOSS_TYPES = {
+      trickster: {
+        name: 'いたずらねこ', emoji: '🃏', face: '😼',
+        walls: 7, aiBase: 'medium',
+        passiveDesc: 'かべずらし: 3ターンごとに壁を1枚移動',
+        cardName: 'にくきゅうトラップ 🐾',
+        cardDesc: '任意のマスに見えないトラップ設置。踏むと1ターンフリーズ'
+      },
+      queen: {
+        name: 'しろねこクイーン', emoji: '👑', face: '😾',
+        walls: 7, aiBase: 'hard',
+        passiveDesc: '女王の領域: ゴール側3行でプレイヤーは壁を置けない',
+        cardName: '氷結 ❄️',
+        cardDesc: 'プレイヤーを2ターンフリーズ'
+      },
+      demon: {
+        name: 'まおうねこ', emoji: '😈', face: '😈',
+        walls: 8, aiBase: 'hard',
+        passiveDesc: '二重壁: 2ターンごとに壁を2枚配置可能',
+        cardName: '大地震 💥',
+        cardDesc: '盤面の壁を全て破壊する'
+      }
+    };
+
+    // ===== ステージデータ =====
+    const STAGE_DATA = [
+      {
+        id: 1, name: 'はじまりの迷路', stars: 1, desc: 'まずは きほんを おぼえよう！',
+        aiDifficulty: 'easy', bossType: null,
+        playerWalls: 6, aiWalls: 6,
+        initialWalls: [
+          { cornerRow: 5, cornerCol: 5, orientation: 'h', owner: 0 },
+          { cornerRow: 7, cornerCol: 3, orientation: 'v', owner: 0 }
+        ],
+        specialCard: { id: 'sp_dash', row: 2, col: 5 }
+      },
+      {
+        id: 2, name: 'かべの森', stars: 2, desc: 'かべだらけ！ みちを さがそう',
+        aiDifficulty: 'medium', bossType: null,
+        playerWalls: 6, aiWalls: 6,
+        initialWalls: [
+          { cornerRow: 3, cornerCol: 3, orientation: 'h', owner: 0 },
+          { cornerRow: 3, cornerCol: 7, orientation: 'v', owner: 0 },
+          { cornerRow: 7, cornerCol: 5, orientation: 'h', owner: 0 },
+          { cornerRow: 9, cornerCol: 9, orientation: 'v', owner: 0 }
+        ],
+        specialCard: { id: 'sp_wallbreak', row: 4, col: 1 }
+      },
+      {
+        id: 3, name: 'いたずらねこ 🃏', stars: 3, desc: '【小ボス】トリックに きをつけろ！',
+        aiDifficulty: 'medium', bossType: 'trickster',
+        playerWalls: 6, aiWalls: 7,
+        initialWalls: [],
+        specialCard: { id: 'sp_anchor', row: 5, col: 5 }
+      },
+      {
+        id: 4, name: 'やみの通路', stars: 4, desc: 'せまい みちを くぐりぬけろ！',
+        aiDifficulty: 'medium', bossType: null,
+        playerWalls: 6, aiWalls: 7,
+        initialWalls: [
+          { cornerRow: 1, cornerCol: 5, orientation: 'v', owner: 0 },
+          { cornerRow: 3, cornerCol: 1, orientation: 'h', owner: 0 },
+          { cornerRow: 5, cornerCol: 9, orientation: 'h', owner: 0 },
+          { cornerRow: 7, cornerCol: 3, orientation: 'v', owner: 0 },
+          { cornerRow: 9, cornerCol: 7, orientation: 'h', owner: 0 },
+          { cornerRow: 9, cornerCol: 1, orientation: 'v', owner: 0 }
+        ],
+        specialCard: { id: 'sp_teleport', row: 3, col: 6 }
+      },
+      {
+        id: 5, name: 'しろねこクイーン 👑', stars: 5, desc: '【中ボス】女王の りょういきに ふみこめ！',
+        aiDifficulty: 'hard', bossType: 'queen',
+        playerWalls: 6, aiWalls: 7,
+        initialWalls: [
+          { cornerRow: 1, cornerCol: 3, orientation: 'h', owner: 2 },
+          { cornerRow: 1, cornerCol: 7, orientation: 'h', owner: 2 },
+          { cornerRow: 1, cornerCol: 5, orientation: 'v', owner: 2 }
+        ],
+        specialCard: { id: 'sp_release', row: 1, col: 2 }
+      },
+      {
+        id: 6, name: 'まおうねこの城 😈', stars: 6, desc: '【ラスボス】すべてを はかいする まおう！',
+        aiDifficulty: 'hard', bossType: 'demon',
+        playerWalls: 6, aiWalls: 8,
+        initialWalls: [
+          { cornerRow: 1, cornerCol: 1, orientation: 'h', owner: 2 },
+          { cornerRow: 1, cornerCol: 5, orientation: 'h', owner: 2 },
+          { cornerRow: 1, cornerCol: 9, orientation: 'h', owner: 2 },
+          { cornerRow: 3, cornerCol: 3, orientation: 'v', owner: 2 },
+          { cornerRow: 3, cornerCol: 7, orientation: 'v', owner: 2 }
+        ],
+        specialCard: null
+      }
+    ];
+
     // 後方互換
     const SKILL_CARDS = CHARACTER_CARDS;
 
@@ -80,6 +185,14 @@ const BOARD_SIZE = 7;
 
     // キャラクター選択状態
     let playerCharacters = { 1: null, 2: null }; // 各プレイヤーが選んだキャラクターID
+
+    // ===== ステージモード状態 =====
+    let stageMode = false;          // ステージモード中かどうか
+    let currentStageIndex = -1;     // 現在のステージインデックス (0-5)
+    let collectedCards = [];        // ステージ間で持ち越すスペシャルカードID
+    let stageCleared = [false, false, false, false, false, false]; // クリア状態
+    let bossState = null;           // ボス固有の状態
+    // bossState = { type, trapCell, wallShiftCooldown, doubleWallCooldown, bossCardUsed, desperationUsed, wallBanTurns, anchoredWalls }
 
     // AI学習データ（事前学習済み - 1000戦でAIが889勝）
     // AIはプレイヤー（ちゃとら）が下の白マスに行くのを妨害する壁を学習
@@ -272,6 +385,7 @@ const BOARD_SIZE = 7;
     function showModeSelect() {
       document.getElementById('mode-select').classList.remove('hidden');
       document.getElementById('ai-select').classList.add('hidden');
+      document.getElementById('stage-select').classList.add('hidden');
       document.getElementById('game-container').classList.add('hidden');
       document.getElementById('card-mode-select').classList.remove('show');
       document.getElementById('card-draft').classList.remove('show');
@@ -337,6 +451,12 @@ const BOARD_SIZE = 7;
     }
 
     function selectCharacter(playerNum, charId) {
+      // ステージモードではステージ専用のキャラ選択処理
+      if (stageMode && playerNum === 1) {
+        selectCharacterForStage(charId);
+        return;
+      }
+
       playerCharacters[playerNum] = charId;
       const char = CHARACTERS.find(c => c.id === charId);
       playerHands[playerNum] = [...char.cards];
@@ -378,15 +498,130 @@ const BOARD_SIZE = 7;
     function backFromCharSelect(playerNum) {
       document.getElementById('card-draft').classList.remove('show');
       if (playerNum === 1) {
-        document.getElementById('mode-select').classList.remove('hidden');
+        if (stageMode) {
+          showStageSelect();
+        } else {
+          document.getElementById('mode-select').classList.remove('hidden');
+        }
       } else {
         showCharacterSelect(1);
       }
     }
 
+    // ===== ステージモード =====
+    function showStageSelect() {
+      document.getElementById('mode-select').classList.add('hidden');
+      document.getElementById('ai-select').classList.add('hidden');
+      document.getElementById('game-container').classList.add('hidden');
+      document.getElementById('card-mode-select').classList.remove('show');
+      document.getElementById('card-draft').classList.remove('show');
+
+      const overlay = document.getElementById('stage-select');
+      const grid = document.getElementById('stage-grid');
+      grid.innerHTML = '';
+
+      STAGE_DATA.forEach((stage, idx) => {
+        const locked = idx > 0 && !stageCleared[idx - 1];
+        const cleared = stageCleared[idx];
+        const isBoss = !!stage.bossType;
+        const bossInfo = stage.bossType ? BOSS_TYPES[stage.bossType] : null;
+
+        const starStr = '★'.repeat(stage.stars) + '☆'.repeat(6 - stage.stars);
+        let bossClass = '';
+        if (stage.bossType === 'trickster') bossClass = 'boss-trickster';
+        else if (stage.bossType === 'queen') bossClass = 'boss-queen';
+        else if (stage.bossType === 'demon') bossClass = 'boss-demon';
+
+        const el = document.createElement('button');
+        el.className = `stage-btn ${bossClass}${locked ? ' locked' : ''}${cleared ? ' cleared' : ''}`;
+        el.disabled = locked;
+        el.innerHTML = `
+          <span class="stage-number">${isBoss ? (bossInfo ? bossInfo.emoji : '') : 'Stage ' + stage.id}</span>
+          <span class="stage-name">${stage.name}</span>
+          <span class="stage-stars">${starStr}</span>
+          <span class="stage-desc">${locked ? '🔒 まだあそべないよ' : stage.desc}</span>
+          ${cleared ? '<span class="stage-clear-badge">✅ クリア！</span>' : ''}
+        `;
+        if (!locked) {
+          el.onclick = () => startStageGame(idx);
+        }
+        grid.appendChild(el);
+      });
+
+      // 収集済みカード表示
+      const cardsArea = document.getElementById('stage-collected-cards');
+      if (collectedCards.length > 0) {
+        cardsArea.innerHTML = '<div class="collected-title">💎 あつめたカード</div>' +
+          collectedCards.map(cid => {
+            const c = SPECIAL_CARDS.find(sc => sc.id === cid);
+            return c ? `<span class="collected-card-chip">${c.icon} ${c.name}</span>` : '';
+          }).join('');
+      } else {
+        cardsArea.innerHTML = '<div class="collected-title">💎 カードはまだないよ</div>';
+      }
+
+      overlay.classList.remove('hidden');
+    }
+
+    function startStageGame(stageIdx) {
+      currentStageIndex = stageIdx;
+      stageMode = true;
+      gameMode = 'ai';
+      const stage = STAGE_DATA[stageIdx];
+
+      // ボスステージのAI難易度設定
+      if (stage.bossType) {
+        const boss = BOSS_TYPES[stage.bossType];
+        aiDifficulty = boss.aiBase === 'hard' ? 'hard' : 'medium';
+      } else {
+        aiDifficulty = stage.aiDifficulty;
+      }
+
+      document.getElementById('stage-select').classList.add('hidden');
+      playerCharacters = { 1: null, 2: null };
+      showCharacterSelect(1);
+    }
+
+    function selectCharacterForStage(charId) {
+      playerCharacters[1] = charId;
+      const char = CHARACTERS.find(c => c.id === charId);
+      playerHands[1] = [...char.cards];
+
+      // ステージモードでは収集済みスペシャルカードを手札に追加
+      collectedCards.forEach(cid => {
+        if (!playerHands[1].includes(cid)) {
+          playerHands[1].push(cid);
+        }
+      });
+
+      // AIにランダムでキャラを割り当て
+      const available = CHARACTERS.filter(c => c.id !== charId);
+      const aiChar = available[Math.floor(Math.random() * available.length)];
+      playerCharacters[2] = aiChar.id;
+      playerHands[2] = [...aiChar.cards];
+
+      document.getElementById('card-draft').classList.remove('show');
+      launchGame();
+    }
+
+    function initBossState(bossType) {
+      if (!bossType) { bossState = null; return; }
+      bossState = {
+        type: bossType,
+        trapCell: null,         // いたずらねこ: トラップ設置位置 {row, col}
+        wallShiftCooldown: 3,   // いたずらねこ: かべずらし残りターン
+        doubleWallCooldown: 2,  // まおうねこ: 二重壁残りターン
+        bossCardUsed: false,    // ボス専用カード使用済み
+        desperationUsed: false, // 逆転の一手使用済み
+        wallBanTurns: 0,        // プレイヤーの壁配置禁止残りターン
+        anchoredWalls: []       // アンカーで固定された壁
+      };
+    }
+
     function launchGame() {
       document.getElementById('mode-select').classList.add('hidden');
       document.getElementById('ai-select').classList.add('hidden');
+      document.getElementById('stage-select').classList.add('hidden');
       document.getElementById('card-mode-select').classList.remove('show');
       document.getElementById('card-draft').classList.remove('show');
       document.getElementById('game-container').classList.remove('hidden');
@@ -398,13 +633,29 @@ const BOARD_SIZE = 7;
       if (gameMode === 'ai') {
         document.getElementById('game-container').classList.add('ai-mode');
         let aiName = aiDifficulty === 'easy' ? 'こねこ' : aiDifficulty === 'medium' ? 'おとなねこ' : 'ボスねこ';
-        if (aiDifficulty === 'hard' && aiLearningData.trained) {
+
+        // ステージモードのボス名
+        if (stageMode && currentStageIndex >= 0) {
+          const stage = STAGE_DATA[currentStageIndex];
+          if (stage.bossType) {
+            const boss = BOSS_TYPES[stage.bossType];
+            aiName = boss.name;
+          }
+        } else if (aiDifficulty === 'hard' && aiLearningData.trained) {
           aiName = 'ボスねこ+';
         }
+
         document.querySelector('#player1-info .player-name').textContent =
           `${char1 ? char1.emoji : '🐈'} ${char1 ? char1.name : 'ちゃとら'} ⬇️`;
-        document.querySelector('#player2-info .player-name').textContent =
-          `⬆️ ${aiName} ${char2 ? char2.emoji : AI_FACES[aiDifficulty]}`;
+
+        if (stageMode && currentStageIndex >= 0 && STAGE_DATA[currentStageIndex].bossType) {
+          const boss = BOSS_TYPES[STAGE_DATA[currentStageIndex].bossType];
+          document.querySelector('#player2-info .player-name').textContent =
+            `⬆️ ${boss.name} ${boss.emoji}`;
+        } else {
+          document.querySelector('#player2-info .player-name').textContent =
+            `⬆️ ${aiName} ${char2 ? char2.emoji : AI_FACES[aiDifficulty]}`;
+        }
       } else {
         document.getElementById('game-container').classList.remove('ai-mode');
         document.querySelector('#player1-info .player-name').textContent =
@@ -586,14 +837,23 @@ const BOARD_SIZE = 7;
     // AI行動ロジック
     function aiTurn() {
       if (gameState.gameOver || gameState.currentPlayer !== 2) return;
-      
+
       showAIThinking();
-      
+
       const thinkTime = aiDifficulty === 'easy' ? 800 : aiDifficulty === 'medium' ? 1200 : 1500;
-      
+
       setTimeout(() => {
         hideAIThinking();
-        
+
+        // ボス専用カード使用チェック（ステージモード）
+        if (stageMode && bossState && !bossState.bossCardUsed) {
+          if (bossUseSpecialCard()) {
+            // ボスカードを使ったらターン消費
+            switchPlayer();
+            return;
+          }
+        }
+
         let action;
         switch (aiDifficulty) {
           case 'easy':
@@ -606,8 +866,27 @@ const BOARD_SIZE = 7;
             action = aiLearningData.trained ? aiLearnedAction() : aiHardAction();
             break;
         }
-        
+
         executeAIAction(action);
+
+        // まおうねこ二重壁: 追加壁配置
+        if (stageMode && bossState && bossState.type === 'demon' && bossState.doubleWallCooldown <= 0) {
+          bossState.doubleWallCooldown = 2;
+          const ai = gameState.players[2];
+          if (ai.walls > 0 && !gameState.gameOver) {
+            // 追加で壁を1枚配置
+            setTimeout(() => {
+              if (gameState.gameOver) return;
+              const bestWall = findBestWall();
+              if (bestWall && ai.walls > 0) {
+                ai.walls--;
+                placeWall(bestWall);
+                showToast('😈 二重壁！まおうねこが追加で壁を置いた！', 'warn', 2000);
+                initBoard();
+              }
+            }, 500);
+          }
+        }
       }, thinkTime);
     }
 
@@ -2611,6 +2890,8 @@ const BOARD_SIZE = 7;
 
       renderCats();
       renderWalls();
+      renderSpecialCard();
+      renderBossInfo();
       updateUI();
       highlightValidMoves();
       
@@ -2849,6 +3130,338 @@ const BOARD_SIZE = 7;
       });
     }
 
+    // ===== スペシャルカード描画 =====
+    function renderSpecialCard() {
+      // 既存のスペシャルカードマーカーを削除
+      document.querySelectorAll('.special-card-marker').forEach(el => el.remove());
+
+      if (!stageMode || !gameState.stageSpecialCard || gameState.specialCardCollected) return;
+
+      const sc = gameState.stageSpecialCard;
+      const cardData = SPECIAL_CARDS.find(c => c.id === sc.id);
+      if (!cardData) return;
+
+      const gridRow = sc.row * 2;
+      const gridCol = sc.col * 2;
+      const cell = document.querySelector(`.cell[data-row="${gridRow}"][data-col="${gridCol}"]`);
+      if (!cell) return;
+
+      const marker = document.createElement('div');
+      marker.className = 'special-card-marker';
+      marker.textContent = cardData.icon;
+      marker.title = cardData.name;
+      cell.appendChild(marker);
+      cell.classList.add('has-special-card');
+    }
+
+    // ===== ボス情報表示 =====
+    function renderBossInfo() {
+      // 既存のボス情報を削除
+      const existing = document.getElementById('boss-stage-info');
+      if (existing) existing.remove();
+
+      if (!stageMode || !bossState) return;
+
+      const boss = BOSS_TYPES[bossState.type];
+      if (!boss) return;
+
+      const infoDiv = document.createElement('div');
+      infoDiv.id = 'boss-stage-info';
+      infoDiv.className = 'boss-stage-info';
+
+      let passiveStatus = '';
+      if (bossState.type === 'trickster') {
+        passiveStatus = `かべずらし: ${bossState.wallShiftCooldown}ターン後`;
+        if (bossState.trapCell) passiveStatus += ' | 🐾トラップ設置中';
+      } else if (bossState.type === 'queen') {
+        passiveStatus = '女王の領域: ゴール側3行 壁禁止';
+      } else if (bossState.type === 'demon') {
+        passiveStatus = `二重壁: ${bossState.doubleWallCooldown}ターン後`;
+      }
+
+      let bossCardStatus = bossState.bossCardUsed ? '使用済み' : '未使用';
+
+      infoDiv.innerHTML = `
+        <div class="boss-info-header">${boss.emoji} ${boss.name}</div>
+        <div class="boss-info-passive">🔄 ${passiveStatus}</div>
+        <div class="boss-info-card">🎴 ${boss.cardName}: ${bossCardStatus}</div>
+        ${bossState.wallBanTurns > 0 ? `<div class="boss-info-debuff">⛔ 壁配置禁止: ${bossState.wallBanTurns}ターン</div>` : ''}
+      `;
+
+      const gameContainer = document.getElementById('game-container');
+      const boardContainer = gameContainer.querySelector('.board-container');
+      gameContainer.insertBefore(infoDiv, boardContainer);
+    }
+
+    // ===== スペシャルカード拾得 =====
+    function checkSpecialCardPickup(boardRow, boardCol) {
+      if (!stageMode || !gameState.stageSpecialCard || gameState.specialCardCollected) return;
+
+      const sc = gameState.stageSpecialCard;
+      if (boardRow === sc.row && boardCol === sc.col && gameState.currentPlayer === 1) {
+        gameState.specialCardCollected = true;
+        if (!collectedCards.includes(sc.id)) {
+          collectedCards.push(sc.id);
+          // 手札にも追加
+          if (playerHands[1] && !playerHands[1].includes(sc.id)) {
+            playerHands[1].push(sc.id);
+          }
+        }
+        const cardData = SPECIAL_CARDS.find(c => c.id === sc.id);
+        showToast(`💎 ${cardData.icon} ${cardData.name} をゲット！`, 'info', 3000);
+        renderSpecialCard();
+      }
+    }
+
+    // ===== ボスパッシブ能力の処理（ターン切替時に呼ばれる） =====
+    function processBossPassive() {
+      if (!stageMode || !bossState) return;
+
+      // プレイヤーの壁配置禁止カウントダウン
+      if (bossState.wallBanTurns > 0 && gameState.currentPlayer === 1) {
+        bossState.wallBanTurns--;
+      }
+
+      // ボスのターン（Player 2）のみパッシブ発動
+      if (gameState.currentPlayer !== 2) {
+        renderBossInfo();
+        return;
+      }
+
+      // === いたずらねこ: かべずらし（3ターンごと） ===
+      if (bossState.type === 'trickster') {
+        bossState.wallShiftCooldown--;
+        if (bossState.wallShiftCooldown <= 0) {
+          bossState.wallShiftCooldown = 3;
+          performWallShift();
+        }
+      }
+
+      // === まおうねこ: 二重壁はaiTurnで処理 ===
+      if (bossState.type === 'demon') {
+        bossState.doubleWallCooldown--;
+      }
+
+      renderBossInfo();
+    }
+
+    // いたずらねこ: 壁を1枚移動
+    function performWallShift() {
+      const bossWalls = gameState.walls.filter(w => w.owner === 2);
+      if (bossWalls.length === 0) return;
+
+      // アンカーされていない壁だけ対象
+      const movableWalls = bossWalls.filter(w => {
+        return !bossState.anchoredWalls.some(a =>
+          a.cornerRow === w.cornerRow && a.cornerCol === w.cornerCol && a.orientation === w.orientation
+        );
+      });
+      if (movableWalls.length === 0) return;
+
+      const wallToMove = movableWalls[Math.floor(Math.random() * movableWalls.length)];
+
+      // 壁を除去
+      const idx = gameState.walls.findIndex(w =>
+        w.cornerRow === wallToMove.cornerRow && w.cornerCol === wallToMove.cornerCol && w.orientation === wallToMove.orientation
+      );
+      if (idx === -1) return;
+      gameState.walls.splice(idx, 1);
+
+      // プレイヤーのゴール付近に再配置を試みる
+      const validPlacements = getValidWallPlacements();
+      if (validPlacements.length > 0) {
+        // プレイヤーのゴール（row 6）に近い位置を優先
+        validPlacements.sort((a, b) => {
+          const distA = Math.abs(a.cornerRow - 11); // row6付近
+          const distB = Math.abs(b.cornerRow - 11);
+          return distA - distB;
+        });
+        const newWall = validPlacements[0];
+        newWall.owner = 2;
+        // 配置前チェック
+        gameState.walls.push(newWall);
+        if (!canBothPlayersReachGoal()) {
+          gameState.walls.pop();
+          // 別の場所を試す
+          for (let i = 1; i < Math.min(validPlacements.length, 10); i++) {
+            const alt = validPlacements[i];
+            alt.owner = 2;
+            gameState.walls.push(alt);
+            if (canBothPlayersReachGoal()) break;
+            gameState.walls.pop();
+          }
+        }
+        showToast('🃏 いたずらねこが壁を動かした！', 'warn', 2000);
+      } else {
+        // 戻す
+        gameState.walls.push(wallToMove);
+      }
+
+      initBoard();
+    }
+
+    // ===== ボス逆転の一手チェック =====
+    function checkBossDesperation() {
+      if (!stageMode || !bossState || bossState.desperationUsed) return;
+
+      const player = gameState.players[1];
+      const distToGoal = BOARD_SIZE - 1 - player.row; // ゴール(row 6)までの距離
+
+      if (distToGoal > 2) return; // まだ遠い
+
+      bossState.desperationUsed = true;
+
+      // === いたずらねこ: 大移動（壁をゴール前に集中再配置） ===
+      if (bossState.type === 'trickster') {
+        const bossWalls = gameState.walls.filter(w => w.owner === 2);
+        const movableWalls = bossWalls.filter(w =>
+          !bossState.anchoredWalls.some(a =>
+            a.cornerRow === w.cornerRow && a.cornerCol === w.cornerCol && a.orientation === w.orientation
+          )
+        );
+        // 全壁を除去
+        movableWalls.forEach(w => {
+          const idx = gameState.walls.findIndex(ww =>
+            ww.cornerRow === w.cornerRow && ww.cornerCol === w.cornerCol && ww.orientation === w.orientation
+          );
+          if (idx >= 0) gameState.walls.splice(idx, 1);
+        });
+        // ゴール付近に再配置
+        const validPlacements = getValidWallPlacements();
+        const goalWalls = validPlacements.filter(w => w.cornerRow >= 9).sort((a, b) => b.cornerRow - a.cornerRow);
+        let placed = 0;
+        for (const w of goalWalls) {
+          if (placed >= movableWalls.length) break;
+          w.owner = 2;
+          gameState.walls.push(w);
+          if (canBothPlayersReachGoal()) {
+            placed++;
+          } else {
+            gameState.walls.pop();
+          }
+        }
+        showToast('🃏 いたずらねこの大移動！壁がゴール前に集まった！', 'warn', 3000);
+        initBoard();
+      }
+
+      // === しろねこクイーン: 召喚壁（進行方向に壁2枚） ===
+      if (bossState.type === 'queen') {
+        const playerRow = player.row;
+        const gridRow = playerRow * 2 + 1; // プレイヤーの1つ下のエッジ
+        let placed = 0;
+        for (let gc = 1; gc < GRID_SIZE - 1; gc += 2) {
+          if (placed >= 2) break;
+          const wall = { cornerRow: gridRow, cornerCol: gc, orientation: 'h', owner: 2 };
+          // 重複チェック
+          const exists = gameState.walls.some(w =>
+            w.cornerRow === wall.cornerRow && w.cornerCol === wall.cornerCol && w.orientation === wall.orientation
+          );
+          if (!exists) {
+            gameState.walls.push(wall);
+            if (canBothPlayersReachGoal()) {
+              placed++;
+            } else {
+              gameState.walls.pop();
+            }
+          }
+        }
+        if (placed > 0) {
+          showToast('👑 女王の召喚壁！壁が突然現れた！', 'warn', 3000);
+          initBoard();
+        }
+      }
+
+      // === まおうねこ: 暗黒結界（壁配置禁止+地震自動発動） ===
+      if (bossState.type === 'demon') {
+        bossState.wallBanTurns = 3;
+        showToast('😈 暗黒結界！3ターン壁を置けない！', 'warn', 3000);
+
+        // 地震未使用なら自動発動
+        if (!bossState.bossCardUsed) {
+          bossState.bossCardUsed = true;
+          setTimeout(() => {
+            performEarthquake();
+          }, 1500);
+        }
+
+        renderBossInfo();
+      }
+    }
+
+    // まおうねこ: 大地震（全壁破壊）
+    function performEarthquake() {
+      // アンカーされた壁以外を全破壊
+      gameState.walls = gameState.walls.filter(w =>
+        bossState.anchoredWalls.some(a =>
+          a.cornerRow === w.cornerRow && a.cornerCol === w.cornerCol && a.orientation === w.orientation
+        )
+      );
+      showToast('💥 大地震！全ての壁が崩壊した！', 'warn', 3000);
+      initBoard();
+    }
+
+    // ===== ボス専用カードAI使用 =====
+    function bossUseSpecialCard() {
+      if (!bossState || bossState.bossCardUsed) return false;
+
+      const ai = gameState.players[2];
+      const player = gameState.players[1];
+
+      // いたずらねこ: にくきゅうトラップ（プレイヤーのゴール方向にトラップ設置）
+      if (bossState.type === 'trickster' && !bossState.trapCell) {
+        const targetRow = Math.min(player.row + 1, BOARD_SIZE - 1);
+        const targetCol = player.col;
+        // プレイヤーや自分がいない空きマス
+        if (!(targetRow === player.row && targetCol === player.col) &&
+            !(targetRow === ai.row && targetCol === ai.col)) {
+          bossState.trapCell = { row: targetRow, col: targetCol };
+          bossState.bossCardUsed = true;
+          showToast('🃏 いたずらねこがなにか しかけた…', 'info', 2000);
+          return true;
+        }
+      }
+
+      // しろねこクイーン: 氷結（プレイヤーを2ターンフリーズ）
+      if (bossState.type === 'queen') {
+        const aiDist = findShortestPath(ai.row, ai.col, 0).length;
+        const playerDist = findShortestPath(player.row, player.col, BOARD_SIZE - 1).length;
+        // プレイヤーが有利な時に使う
+        if (playerDist <= aiDist && playerDist <= 4) {
+          player.frozen = true;
+          player.frozenTurns = 2;
+          bossState.bossCardUsed = true;
+          showToast('❄️ しろねこクイーンの氷結！2ターン動けない！', 'warn', 3000);
+          renderBossInfo();
+          return true;
+        }
+      }
+
+      // まおうねこ: 大地震（プレイヤーが壁を多く置いた時に使う）
+      if (bossState.type === 'demon') {
+        const playerWalls = gameState.walls.filter(w => w.owner === 1);
+        if (playerWalls.length >= 3) {
+          bossState.bossCardUsed = true;
+          performEarthquake();
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    // ===== トラップチェック（いたずらねこ） =====
+    function checkTrap(boardRow, boardCol) {
+      if (!bossState || bossState.type !== 'trickster' || !bossState.trapCell) return;
+      if (gameState.currentPlayer !== 1) return;
+
+      if (boardRow === bossState.trapCell.row && boardCol === bossState.trapCell.col) {
+        bossState.trapCell = null;
+        gameState.players[1].frozen = true;
+        gameState.players[1].frozenTurns = 1;
+        showToast('🐾 トラップにひっかかった！1ターンフリーズ！', 'warn', 3000);
+      }
+    }
+
     function handleFloorClick(boardRow, boardCol) {
       if (gameState.gameOver || animating) return;
 
@@ -2884,6 +3497,11 @@ const BOARD_SIZE = 7;
 
           player.row = boardRow;
           player.col = boardCol;
+
+          // ステージモード: スペシャルカード拾得チェック
+          checkSpecialCardPickup(boardRow, boardCol);
+          // ステージモード: トラップチェック
+          checkTrap(boardRow, boardCol);
 
           renderCats(gameState.currentPlayer);
           checkWin();
@@ -3063,6 +3681,24 @@ const BOARD_SIZE = 7;
     }
     
     function canPlaceWall(wall) {
+      // ステージモード: 壁配置禁止チェック
+      if (stageMode && bossState && gameState.currentPlayer === 1) {
+        // 暗黒結界による壁配置禁止
+        if (bossState.wallBanTurns > 0) {
+          return false;
+        }
+        // 女王の領域: ゴール側3行（row 0-2）ではプレイヤーは壁を置けない
+        if (bossState.type === 'queen') {
+          const wallBoardRow = Math.floor(wall.cornerRow / 2);
+          if (wallBoardRow <= 2) {
+            return false;
+          }
+        }
+      }
+
+      // 解放カードによる壁配置禁止解除チェック
+      // (解放カード使用時にwallBanTurnsを0にリセットするので、ここでは追加処理不要)
+
       // 既存の壁と重なっていないか
       const newCells = getWallCells(wall);
       for (const existingWall of gameState.walls) {
@@ -3075,12 +3711,12 @@ const BOARD_SIZE = 7;
           }
         }
       }
-      
+
       // 一時的に壁を追加して経路をチェック
       gameState.walls.push(wall);
       const canReach = canBothPlayersReachGoal();
       gameState.walls.pop();
-      
+
       return canReach;
     }
 
@@ -3380,6 +4016,48 @@ const BOARD_SIZE = 7;
           }
         }
       }
+
+      // === スペシャルカード: かけあし（壁を無視して進行方向に2マス前進） ===
+      if (cardId === 'sp_dash') {
+        const dr = boardRow - player.row;
+        const dc = boardCol - player.col;
+        // 前進方向に2マス（Player1は下方向）
+        if (pNum === 1 && dr === 2 && dc === 0 && boardRow < BOARD_SIZE) {
+          if (!(boardRow === other.row && boardCol === other.col)) {
+            saveHistory();
+            showCardEffect(cardId, () => {
+              player.row = boardRow;
+              player.col = boardCol;
+              checkSpecialCardPickup(boardRow, boardCol);
+              checkTrap(boardRow, boardCol);
+              useCard();
+              renderCats(pNum);
+              checkWin();
+              if (!gameState.gameOver) afterCardAction(cardId);
+            });
+            return;
+          }
+        }
+      }
+
+      // === スペシャルカード: テレポート（任意の空きマスに瞬間移動） ===
+      if (cardId === 'sp_teleport') {
+        if (!(boardRow === player.row && boardCol === player.col) &&
+            !(boardRow === other.row && boardCol === other.col)) {
+          saveHistory();
+          showCardEffect(cardId, () => {
+            player.row = boardRow;
+            player.col = boardCol;
+            checkSpecialCardPickup(boardRow, boardCol);
+            checkTrap(boardRow, boardCol);
+            useCard();
+            renderCats(pNum);
+            checkWin();
+            if (!gameState.gameOver) afterCardAction(cardId);
+          });
+          return;
+        }
+      }
     }
 
     // 電光石火用: BFSで指定歩数以内に到達可能か
@@ -3455,7 +4133,7 @@ const BOARD_SIZE = 7;
         showCardEffect(cardId, () => {
           animateWallDestroy(savedWall, () => {
             const idx = gameState.walls.findIndex(w =>
-              w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol
+              w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol && w.orientation === savedWall.orientation
             );
             if (idx !== -1) gameState.walls.splice(idx, 1);
             useCard();
@@ -3463,6 +4141,55 @@ const BOARD_SIZE = 7;
             updateUI();
             afterCardAction(cardId);
           });
+        });
+      }
+      // === スペシャルカード: 壁くずし（任意の壁を1枚破壊） ===
+      else if (cardId === 'sp_wallbreak') {
+        // アンカーされた壁は壊せない
+        if (bossState && bossState.anchoredWalls.some(a =>
+          a.cornerRow === wall.cornerRow && a.cornerCol === wall.cornerCol && a.orientation === wall.orientation
+        )) {
+          showToast('⚓ アンカーされた壁は壊せないよ！', 'warn');
+          return;
+        }
+        const savedWall = {...wall};
+        showCardEffect(cardId, () => {
+          const idx = gameState.walls.findIndex(w =>
+            w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol && w.orientation === savedWall.orientation
+          );
+          if (idx !== -1) gameState.walls.splice(idx, 1);
+          useCard();
+          renderWalls();
+          updateUI();
+          showToast('🔨 壁を破壊した！', 'info');
+          afterCardAction(cardId);
+        });
+      }
+      // === スペシャルカード: 壁アンカー（自分の壁1枚を固定） ===
+      else if (cardId === 'sp_anchor') {
+        if (wall.owner !== gameState.currentPlayer) {
+          showToast('自分の壁しか固定できないよ！', 'warn');
+          return;
+        }
+        showCardEffect(cardId, () => {
+          // bossStateがない場合は安全に初期化（ステージモード以外でも使えるように）
+          if (!bossState) {
+            bossState = {
+              type: null, trapCell: null, wallShiftCooldown: 0,
+              doubleWallCooldown: 0, bossCardUsed: true,
+              desperationUsed: true, wallBanTurns: 0, anchoredWalls: []
+            };
+          }
+          if (!bossState.anchoredWalls) bossState.anchoredWalls = [];
+          bossState.anchoredWalls.push({
+            cornerRow: wall.cornerRow,
+            cornerCol: wall.cornerCol,
+            orientation: wall.orientation
+          });
+          useCard();
+          showToast('⚓ 壁を固定した！移動も破壊もされないよ！', 'info');
+          renderWalls();
+          afterCardAction(cardId);
         });
       }
       // 壁回収(旧): recover
@@ -3475,7 +4202,7 @@ const BOARD_SIZE = 7;
         showCardEffect(cardId, () => {
           animateRecover(savedWall, () => {
             const idx = gameState.walls.findIndex(w =>
-              w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol
+              w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol && w.orientation === savedWall.orientation
             );
             if (idx !== -1) gameState.walls.splice(idx, 1);
             gameState.players[gameState.currentPlayer].walls++;
@@ -3630,11 +4357,97 @@ const BOARD_SIZE = 7;
       const overlay = document.getElementById('winner-overlay');
       const winnerCat = document.getElementById('winner-cat');
       const winnerText = document.getElementById('winner-text');
-      
+
       const player = gameState.players[playerNum];
-      winnerCat.textContent = playerNum === 2 && gameMode === 'ai' ? AI_FACES[aiDifficulty] : player.emoji;
+
+      // ステージモードのボス対応
+      if (stageMode && playerNum === 2 && bossState) {
+        const boss = BOSS_TYPES[bossState.type];
+        winnerCat.textContent = boss.emoji;
+      } else {
+        winnerCat.textContent = playerNum === 2 && gameMode === 'ai' ? AI_FACES[aiDifficulty] : player.emoji;
+      }
       winnerCat.style.color = player.color;
-      
+
+      // ステージモードの勝利/敗北処理
+      if (stageMode && currentStageIndex >= 0) {
+        const stage = STAGE_DATA[currentStageIndex];
+        const winnerModal = overlay.querySelector('.winner-modal');
+
+        if (playerNum === 1) {
+          stageCleared[currentStageIndex] = true;
+          const isLastStage = currentStageIndex === STAGE_DATA.length - 1;
+
+          if (isLastStage) {
+            winnerText.innerHTML = '🎊 ぜんステージ クリア！🎊<br><span style="font-size:0.8em;">おめでとう！きみは まおうねこを たおした！</span>';
+          } else {
+            winnerText.innerHTML = `✨ ステージ${stage.id} クリア！✨`;
+            if (stage.specialCard && !gameState.specialCardCollected) {
+              winnerText.innerHTML += '<br><span style="font-size:0.7em;color:#aaa;">💎 スペシャルカードは とれなかった…</span>';
+            }
+          }
+
+          // ボタンをステージモード用に差し替え
+          const existingBtns = winnerModal.querySelectorAll('button');
+          existingBtns.forEach(b => b.style.display = 'none');
+
+          const nextBtn = document.createElement('button');
+          nextBtn.className = 'btn-reset';
+          nextBtn.id = 'stage-next-btn';
+          if (isLastStage) {
+            nextBtn.textContent = '🏠 タイトルへ';
+            nextBtn.onclick = () => { cleanupStageButtons(); backToTitle(); };
+          } else {
+            nextBtn.textContent = '➡️ つぎのステージへ';
+            nextBtn.onclick = () => { cleanupStageButtons(); goToNextStage(); };
+          }
+          winnerModal.appendChild(nextBtn);
+
+          const retryBtn = document.createElement('button');
+          retryBtn.className = 'back-btn';
+          retryBtn.id = 'stage-retry-btn';
+          retryBtn.style.marginTop = '10px';
+          retryBtn.textContent = '🔄 もういちど';
+          retryBtn.onclick = () => { cleanupStageButtons(); resetGame(); };
+          winnerModal.appendChild(retryBtn);
+
+          const stageBtn = document.createElement('button');
+          stageBtn.className = 'back-btn';
+          stageBtn.id = 'stage-select-btn';
+          stageBtn.style.marginTop = '10px';
+          stageBtn.textContent = '📋 ステージ選択へ';
+          stageBtn.onclick = () => { cleanupStageButtons(); overlay.classList.remove('show'); showStageSelect(); };
+          winnerModal.appendChild(stageBtn);
+
+        } else {
+          const bossName = bossState ? BOSS_TYPES[bossState.type].name : stage.name;
+          winnerText.textContent = `${bossName} に まけちゃった...😿`;
+
+          const existingBtns = winnerModal.querySelectorAll('button');
+          existingBtns.forEach(b => b.style.display = 'none');
+
+          const retryBtn = document.createElement('button');
+          retryBtn.className = 'btn-reset';
+          retryBtn.id = 'stage-retry-btn';
+          retryBtn.textContent = '🔄 もういちど';
+          retryBtn.onclick = () => { cleanupStageButtons(); resetGame(); };
+          winnerModal.appendChild(retryBtn);
+
+          const stageBtn = document.createElement('button');
+          stageBtn.className = 'back-btn';
+          stageBtn.id = 'stage-select-btn';
+          stageBtn.style.marginTop = '10px';
+          stageBtn.textContent = '📋 ステージ選択へ';
+          stageBtn.onclick = () => { cleanupStageButtons(); overlay.classList.remove('show'); showStageSelect(); };
+          winnerModal.appendChild(stageBtn);
+        }
+
+        overlay.classList.add('show');
+        spawnConfetti();
+        return;
+      }
+
+      // 通常モード
       if (playerNum === 1) {
         winnerText.textContent = gameMode === 'ai' ? 'やったね！きみの かち！🎉' : 'ちゃとら の かち！🎉';
       } else {
@@ -3645,9 +4458,28 @@ const BOARD_SIZE = 7;
           winnerText.textContent = 'くろねこ の かち！🎉';
         }
       }
-      
+
       overlay.classList.add('show');
       spawnConfetti();
+    }
+
+    function cleanupStageButtons() {
+      ['stage-next-btn', 'stage-retry-btn', 'stage-select-btn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+      });
+      // 通常ボタンを復元
+      const winnerModal = document.querySelector('.winner-modal');
+      winnerModal.querySelectorAll('button').forEach(b => b.style.display = '');
+    }
+
+    function goToNextStage() {
+      document.getElementById('winner-overlay').classList.remove('show');
+      if (currentStageIndex < STAGE_DATA.length - 1) {
+        startStageGame(currentStageIndex + 1);
+      } else {
+        showStageSelect();
+      }
     }
 
     function spawnConfetti() {
@@ -3682,6 +4514,9 @@ const BOARD_SIZE = 7;
 
     function backToTitle() {
       document.getElementById('winner-overlay').classList.remove('show');
+      stageMode = false;
+      currentStageIndex = -1;
+      bossState = null;
       showModeSelect();
     }
 
@@ -3732,6 +4567,13 @@ const BOARD_SIZE = 7;
             delete nextPlayer.sealedCards[cid];
           }
         }
+      }
+
+      // ステージモード: ボスパッシブ処理
+      processBossPassive();
+      // ステージモード: ボス逆転の一手チェック（プレイヤーのターン開始時）
+      if (gameState.currentPlayer === 2 && stageMode && bossState) {
+        checkBossDesperation();
       }
 
       updateUI();
@@ -3790,8 +4632,10 @@ const BOARD_SIZE = 7;
       }
 
       // 手札があればそのカードのみ、なければ全カード
+      // スペシャルカードも含める
+      const allCards = [...SKILL_CARDS, ...SPECIAL_CARDS];
       const availableCards = hand
-        ? SKILL_CARDS.filter(c => hand.includes(c.id))
+        ? allCards.filter(c => hand.includes(c.id))
         : SKILL_CARDS;
 
       const grid = document.getElementById('card-grid');
@@ -3976,6 +4820,22 @@ const BOARD_SIZE = 7;
         case 'construction_blast':
           return gameState.walls.length > 0;
 
+        // === スペシャルカード ===
+        case 'sp_dash':
+          return true; // 壁を無視して2マス前進
+        case 'sp_wallbreak':
+          return gameState.walls.length > 0;
+        case 'sp_anchor': {
+          // 自分が置いた壁が存在するか
+          const myWalls = gameState.walls.filter(w => w.owner === gameState.currentPlayer);
+          return myWalls.length > 0;
+        }
+        case 'sp_teleport':
+          return true; // 任意の空きマスへ
+        case 'sp_release':
+          // フリーズ中か壁配置禁止中
+          return player.frozen || (bossState && bossState.wallBanTurns > 0);
+
         default:
           return true;
       }
@@ -4063,7 +4923,7 @@ const BOARD_SIZE = 7;
       document.getElementById('btn-wall-v2').classList.remove('active');
       document.getElementById('btn-card2').classList.add('active');
 
-      const card = SKILL_CARDS.find(c => c.id === cardId);
+      const card = [...SKILL_CARDS, ...SPECIAL_CARDS].find(c => c.id === cardId);
       document.getElementById('mode-indicator').textContent = `カード: ${card.icon} ${card.name}`;
       document.getElementById('mode-indicator2').textContent = `カード: ${card.icon} ${card.name}`;
 
@@ -4072,7 +4932,8 @@ const BOARD_SIZE = 7;
         'thief_kakureru', 'thief_itadaki',
         'ghost_kanashibari',
         'electric_shock',
-        'prof_wallmachine', 'prof_copy'
+        'prof_wallmachine', 'prof_copy',
+        'sp_release'
       ];
       if (immediateCards.includes(cardId)) {
         executeImmediateCard(cardId);
@@ -4085,13 +4946,27 @@ const BOARD_SIZE = 7;
         return;
       }
 
+      // スペシャルカード: 壁くずし → 壁選択フェーズ
+      if (cardId === 'sp_wallbreak') {
+        gameState.cardPhase = 'selectTarget';
+        highlightCardTargets(cardId);
+        return;
+      }
+
+      // スペシャルカード: 壁アンカー → 自分の壁選択フェーズ
+      if (cardId === 'sp_anchor') {
+        gameState.cardPhase = 'selectTarget';
+        highlightCardTargets(cardId);
+        return;
+      }
+
       gameState.cardPhase = 'selectTarget';
       highlightCardTargets(cardId);
     }
 
     // カード使用後のアクションタイプに応じた処理
     function afterCardAction(cardId) {
-      const card = CHARACTER_CARDS.find(c => c.id === cardId);
+      const card = [...CHARACTER_CARDS, ...SPECIAL_CARDS].find(c => c.id === cardId);
       if (!card) { switchPlayer(); return; }
 
       // コピーカード使用時はコピー元のactionTypeに従う（ただしprof_copy自体のturn_endは無視）
@@ -4188,6 +5063,24 @@ const BOARD_SIZE = 7;
           break;
         case 'prof_copy':
           executeCopy();
+          break;
+
+        // === スペシャルカード ===
+        case 'sp_release':
+          showCardEffect(cardId, () => {
+            // フリーズ解除
+            player.frozen = false;
+            player.frozenTurns = 0;
+            // 壁配置禁止解除
+            if (bossState) {
+              bossState.wallBanTurns = 0;
+            }
+            useCard();
+            showToast('🔓 解放！すべての行動制限を解除した！', 'info');
+            updateUI();
+            renderBossInfo();
+            afterCardAction(cardId);
+          });
           break;
       }
     }
@@ -4391,7 +5284,7 @@ const BOARD_SIZE = 7;
     }
 
     function showCardEffect(cardId, onComplete) {
-      const card = SKILL_CARDS.find(c => c.id === cardId);
+      const card = [...SKILL_CARDS, ...SPECIAL_CARDS].find(c => c.id === cardId);
       if (!card) { if (onComplete) onComplete(); return; }
       
       animating = true;
@@ -4969,10 +5862,19 @@ const BOARD_SIZE = 7;
       }
       // === 壁操作カード: 全壁をハイライト ===
       else if (['sumo_teppou', 'construction_move', 'construction_rotate', 'construction_blast',
-                'slide', 'rotate', 'walldestroy'].includes(cardId)) {
+                'slide', 'rotate', 'walldestroy', 'sp_wallbreak'].includes(cardId)) {
         gameState.walls.forEach(wall => {
           const cell = document.querySelector(`.cell[data-row="${wall.cornerRow}"][data-col="${wall.cornerCol}"]`);
           if (cell) cell.classList.add('highlight-wall');
+        });
+      }
+      // === 壁アンカー: 自分の壁のみハイライト ===
+      else if (cardId === 'sp_anchor') {
+        gameState.walls.forEach(wall => {
+          if (wall.owner === gameState.currentPlayer) {
+            const cell = document.querySelector(`.cell[data-row="${wall.cornerRow}"][data-col="${wall.cornerCol}"]`);
+            if (cell) cell.classList.add('highlight-wall');
+          }
         });
       }
       // === 壁回収(旧) ===
@@ -4983,6 +5885,23 @@ const BOARD_SIZE = 7;
             if (cell) cell.classList.add('highlight-wall');
           }
         });
+      }
+      // === スペシャル: かけあし（進行方向2マス） ===
+      else if (cardId === 'sp_dash') {
+        const targetRow = player.row + 2;
+        if (targetRow < BOARD_SIZE && !(targetRow === other.row && player.col === other.col)) {
+          highlightFloor(targetRow, player.col, 'highlight-special');
+        }
+      }
+      // === スペシャル: テレポート（全空きマス） ===
+      else if (cardId === 'sp_teleport') {
+        for (let r = 0; r < BOARD_SIZE; r++) {
+          for (let c = 0; c < BOARD_SIZE; c++) {
+            if (r === player.row && c === player.col) continue;
+            if (r === other.row && c === other.col) continue;
+            highlightFloor(r, c, 'highlight-special');
+          }
+        }
       }
     }
 
@@ -5180,13 +6099,35 @@ const BOARD_SIZE = 7;
       const char1 = CHARACTERS.find(c => c.id === playerCharacters[1]);
       const char2 = CHARACTERS.find(c => c.id === playerCharacters[2]);
 
+      // ステージモードの壁数とボス設定
+      let p1Walls = 6, p2Walls = 6;
+      let stageInitialWalls = [];
+      let stageSpecialCard = null;
+      let stageBossType = null;
+
+      if (stageMode && currentStageIndex >= 0) {
+        const stage = STAGE_DATA[currentStageIndex];
+        p1Walls = stage.playerWalls;
+        p2Walls = stage.aiWalls;
+        stageInitialWalls = stage.initialWalls || [];
+        stageSpecialCard = stage.specialCard;
+        stageBossType = stage.bossType;
+      }
+
+      // ボス用の絵文字
+      let p2Emoji = char2 ? char2.emoji : '🐈‍⬛';
+      if (stageBossType) {
+        const boss = BOSS_TYPES[stageBossType];
+        p2Emoji = boss.emoji;
+      }
+
       gameState = {
         currentPlayer: 1,
         mode: 'move',
         turn: 1,
         players: {
-          1: { row: 0, col: 3, walls: 6, emoji: char1 ? char1.emoji : '🐈', color: '#ffffff', cardsUsed: {}, totalCardsUsed: 0, frozen: false, frozenTurns: 0, hidden: false, sealedCards: {} },
-          2: { row: 6, col: 3, walls: 6, emoji: char2 ? char2.emoji : '🐈‍⬛', color: '#333333', cardsUsed: {}, totalCardsUsed: 0, frozen: false, frozenTurns: 0, hidden: false, sealedCards: {} }
+          1: { row: 0, col: 3, walls: p1Walls, emoji: char1 ? char1.emoji : '🐈', color: '#ffffff', cardsUsed: {}, totalCardsUsed: 0, frozen: false, frozenTurns: 0, hidden: false, sealedCards: {} },
+          2: { row: 6, col: 3, walls: p2Walls, emoji: p2Emoji, color: '#333333', cardsUsed: {}, totalCardsUsed: 0, frozen: false, frozenTurns: 0, hidden: false, sealedCards: {} }
         },
         walls: [],
         gameOver: false,
@@ -5197,8 +6138,23 @@ const BOARD_SIZE = 7;
         slideTargetWall: null,
         slideCardId: null,
         copyingCard: false,
-        pendingMoveOk: false
+        pendingMoveOk: false,
+        stageSpecialCard: stageSpecialCard, // ステージ上のスペシャルカード
+        specialCardCollected: false         // このステージでカードを拾ったか
       };
+
+      // 初期壁を配置
+      stageInitialWalls.forEach(w => {
+        gameState.walls.push({
+          cornerRow: w.cornerRow,
+          cornerCol: w.cornerCol,
+          orientation: w.orientation,
+          owner: w.owner
+        });
+      });
+
+      // ボス状態を初期化
+      initBossState(stageBossType);
 
       // 履歴をクリア
       historyStack = [];

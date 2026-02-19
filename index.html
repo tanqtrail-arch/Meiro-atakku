@@ -2143,6 +2143,73 @@
       60% { transform: translate(-50%, -50%) scale(1.1); }
       100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     }
+
+    /* ===== ステージ選択画面 ===== */
+    .stage-select-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      background-size: 300% 300%;
+      animation: titleBg 8s ease infinite;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 400; padding: 20px; overflow-y: auto;
+    }
+    .stage-select-overlay.hidden { display: none; }
+    .stage-select-modal {
+      text-align: center; width: 100%; max-width: 400px; position: relative; z-index: 2;
+    }
+    .stage-select-modal h2 { font-size: 1.5rem; color: #fff; margin-bottom: 15px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+    .stage-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+    .stage-btn {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 14px; border: none; border-radius: 16px; cursor: pointer;
+      font-family: inherit; transition: all 0.2s ease;
+      background: linear-gradient(145deg, #2d3436 0%, #636e72 100%); color: #fff;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 3px 10px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .stage-btn:active { transform: scale(0.97); }
+    .stage-btn.locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
+    .stage-btn.cleared { border: 2px solid #2ecc71; }
+    .stage-btn.boss-trickster { background: linear-gradient(145deg, #6c5ce7 0%, #a29bfe 100%); }
+    .stage-btn.boss-queen { background: linear-gradient(145deg, #00cec9 0%, #81ecec 100%); color: #1a1a2e; }
+    .stage-btn.boss-demon { background: linear-gradient(145deg, #d63031 0%, #ff7675 100%); }
+    .stage-number { font-size: 0.75em; opacity: 0.8; }
+    .stage-name { font-size: 1.1em; font-weight: bold; margin: 2px 0; }
+    .stage-stars { font-size: 0.8em; letter-spacing: 2px; }
+    .stage-desc { font-size: 0.7em; opacity: 0.8; }
+    .stage-clear-badge { font-size: 0.75em; color: #2ecc71; font-weight: bold; }
+    .stage-collected-cards { margin: 10px 0; }
+    .collected-title { font-size: 0.85em; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
+    .collected-card-chip {
+      display: inline-block; background: rgba(255,255,255,0.15); border-radius: 12px;
+      padding: 3px 10px; margin: 2px; font-size: 0.8em; color: #ffd93d;
+    }
+
+    /* ===== スペシャルカードマーカー ===== */
+    .special-card-marker {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 1.4em; z-index: 8; pointer-events: none;
+      animation: specialCardFloat 2s ease-in-out infinite;
+      filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+    }
+    .has-special-card {
+      box-shadow: 0 0 10px 3px rgba(255, 215, 0, 0.4) !important;
+    }
+    @keyframes specialCardFloat {
+      0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+      50% { transform: translate(-50%, -50%) translateY(-4px); }
+    }
+
+    /* ===== ボス情報パネル ===== */
+    .boss-stage-info {
+      background: linear-gradient(135deg, rgba(214, 48, 49, 0.15), rgba(255, 118, 117, 0.1));
+      border: 1px solid rgba(214, 48, 49, 0.3); border-radius: 12px;
+      padding: 8px 12px; margin: 6px 10px; text-align: center; font-size: 0.75em;
+    }
+    .boss-info-header { font-weight: bold; font-size: 1.1em; margin-bottom: 3px; }
+    .boss-info-passive { color: #fdcb6e; }
+    .boss-info-card { color: #74b9ff; }
+    .boss-info-debuff { color: #ff7675; font-weight: bold; margin-top: 3px; }
   </style>
 </head>
 <body>
@@ -2165,7 +2232,23 @@
           <span class="mode-title">CPUと対戦</span>
           <span class="mode-desc">ひとりであそぶ</span>
         </button>
+
+        <button class="mode-btn" onclick="showStageSelect()" style="background: linear-gradient(145deg, #e17055 0%, #d63031 100%); color: white;">
+          <span class="mode-icon">🏰</span>
+          <span class="mode-title">ステージモード</span>
+          <span class="mode-desc">ボスねこを たおせ！</span>
+        </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ステージ選択画面 -->
+  <div class="stage-select-overlay hidden" id="stage-select">
+    <div class="stage-select-modal">
+      <h2>🏰 ステージモード 🏰</h2>
+      <div class="stage-grid" id="stage-grid"></div>
+      <div class="stage-collected-cards" id="stage-collected-cards"></div>
+      <button class="back-btn" onclick="showModeSelect()" style="color:#fff;border-color:rgba(255,255,255,0.3);">← もどる</button>
     </div>
   </div>
 
