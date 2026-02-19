@@ -22,7 +22,9 @@ const BOARD_SIZE = 7;
       { id: 'rotate', icon: '🔃', name: '回転', desc: '壁を90度回転させる', limit: 1 },
       { id: 'recover', icon: '♻️', name: '回収', desc: '壁を1枚とりもどす', limit: 1 },
       { id: 'freeze', icon: '🐾', name: '足止め', desc: '次の相手ターン、移動不可', limit: 1 },
-      { id: 'wallplus', icon: '🧱', name: '壁プラス', desc: '手持ちの壁を2枚増やす', limit: 1 }
+      { id: 'wallplus', icon: '🧱', name: '壁プラス', desc: '手持ちの壁を2枚増やす', limit: 1 },
+      { id: 'walldestroy', icon: '💥', name: '壁破壊', desc: '壁を1枚完全に除去する', limit: 1 },
+      { id: 'copy', icon: '🔬', name: '複製', desc: '相手のカード1枚をコピーして使う', limit: 1 }
     ];
 
     const AI_FACES = {
@@ -167,7 +169,8 @@ const BOARD_SIZE = 7;
       cardPhase: null,
       wallOrientation: 'h', // 'h' or 'v'
       previewWall: null,
-      slideTargetWall: null // スライド対象の壁
+      slideTargetWall: null, // スライド対象の壁
+      copyingCard: false // 複製カード使用中フラグ
     };
 
     // 履歴スタック（一手戻る用）
@@ -1555,7 +1558,8 @@ const BOARD_SIZE = 7;
         cardPhase: null,
         wallOrientation: 'h',
         previewWall: null,
-        slideTargetWall: null
+        slideTargetWall: null,
+        copyingCard: false
       };
     }
 
@@ -2835,11 +2839,25 @@ const BOARD_SIZE = 7;
         showCardEffect('recover', () => {
           animateRecover(savedWall, () => {
             // wallIndexが変わっている可能性があるので再検索
-            const idx = gameState.walls.findIndex(w => 
+            const idx = gameState.walls.findIndex(w =>
               w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol
             );
             if (idx !== -1) gameState.walls.splice(idx, 1);
             gameState.players[gameState.currentPlayer].walls++;
+            useCard();
+            renderWalls();
+            updateUI();
+            switchPlayer();
+          });
+        });
+      } else if (card === 'walldestroy') {
+        const savedWall = {...wall};
+        showCardEffect('walldestroy', () => {
+          animateWallDestroy(savedWall, () => {
+            const idx = gameState.walls.findIndex(w =>
+              w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol
+            );
+            if (idx !== -1) gameState.walls.splice(idx, 1);
             useCard();
             renderWalls();
             updateUI();
@@ -3200,6 +3218,7 @@ const BOARD_SIZE = 7;
           return gameState.turn >= 3 && swapDist <= 2;
         case 'slide':
         case 'rotate':
+        case 'walldestroy':
           return gameState.walls.length > 0;
         case 'recover':
           // 自分が置いた壁がある場合のみ使用可能
@@ -3210,6 +3229,14 @@ const BOARD_SIZE = 7;
           return isAdjacentToOther() && canJumpOver();
         case 'push':
           return isAdjacentToOther() && canPushOther();
+        case 'copy': {
+          // 相手が未使用のカードを持っているか（複製自体は除く）
+          const otherHandC = playerHands[otherNum];
+          if (otherHandC) {
+            return otherHandC.some(cid => cid !== 'copy' && !(other.cardsUsed[cid] || 0));
+          }
+          return SKILL_CARDS.some(c => c.id !== 'copy' && !((other.cardsUsed[c.id] || 0) >= c.limit));
+        }
         default:
           return true;
       }
@@ -3314,6 +3341,10 @@ const BOARD_SIZE = 7;
         executeWallPlus();
         return;
       }
+      if (cardId === 'copy') {
+        executeCopy();
+        return;
+      }
 
       gameState.cardPhase = 'selectTarget';
       highlightCardTargets(cardId);
@@ -3349,7 +3380,7 @@ const BOARD_SIZE = 7;
 
     function executeWallPlus() {
       const currentP = gameState.currentPlayer;
-      
+
       showCardEffect('wallplus', () => {
         animateWallPlus(currentP, () => {
           gameState.players[currentP].walls += 2;
@@ -3359,12 +3390,102 @@ const BOARD_SIZE = 7;
       });
     }
 
+    function executeCopy() {
+      const otherNum = gameState.currentPlayer === 1 ? 2 : 1;
+      const other = gameState.players[otherNum];
+      const otherHand = playerHands[otherNum];
+
+      // 相手の未使用カードを取得（複製自体はコピー不可）
+      let opponentCards;
+      if (otherHand) {
+        opponentCards = SKILL_CARDS.filter(c =>
+          c.id !== 'copy' && otherHand.includes(c.id) && !((other.cardsUsed[c.id] || 0) >= c.limit)
+        );
+      } else {
+        opponentCards = SKILL_CARDS.filter(c =>
+          c.id !== 'copy' && !((other.cardsUsed[c.id] || 0) >= c.limit)
+        );
+      }
+
+      if (opponentCards.length === 0) {
+        showToast('コピーできるカードがないよ！', 'warn');
+        return;
+      }
+
+      showCopyModal(opponentCards);
+    }
+
+    function showCopyModal(cards) {
+      const grid = document.getElementById('copy-grid');
+      grid.innerHTML = '';
+
+      cards.forEach(card => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'skill-card';
+        const canUse = canUseCard(card.id);
+        if (!canUse) cardEl.classList.add('disabled');
+
+        const imgSrc = CARD_IMAGES[card.id];
+        if (imgSrc) {
+          cardEl.innerHTML = `
+            <img src="${imgSrc}" class="card-image" alt="${card.name}" style="width:100%;height:auto;border-radius:10px;display:block;">
+          `;
+        } else {
+          cardEl.innerHTML = `
+            <div class="card-icon">${card.icon}</div>
+            <div class="card-name">${card.name}</div>
+            <div class="card-desc">${card.desc}</div>
+          `;
+        }
+
+        if (canUse) {
+          cardEl.onclick = () => executeCopiedCard(card.id);
+        }
+
+        grid.appendChild(cardEl);
+      });
+
+      const copyModal = document.getElementById('copy-modal');
+      copyModal.classList.toggle('rotated-for-p1', gameState.currentPlayer === 1 && gameMode !== 'ai');
+      copyModal.classList.add('show');
+    }
+
+    function closeCopyModal() {
+      const copyModal = document.getElementById('copy-modal');
+      copyModal.classList.remove('show', 'rotated-for-p1');
+    }
+
+    function executeCopiedCard(cardId) {
+      closeCopyModal();
+      gameState.copyingCard = true;
+      gameState.selectedCard = cardId;
+
+      const card = SKILL_CARDS.find(c => c.id === cardId);
+      document.getElementById('mode-indicator').textContent = `複製: ${card.icon} ${card.name}`;
+      document.getElementById('mode-indicator2').textContent = `複製: ${card.icon} ${card.name}`;
+
+      // 即時実行カード
+      if (cardId === 'swap') { executeSwap(); return; }
+      if (cardId === 'freeze') { executeFreeze(); return; }
+      if (cardId === 'wallplus') { executeWallPlus(); return; }
+
+      // ターゲット選択カード
+      gameState.cardPhase = 'selectTarget';
+      highlightCardTargets(cardId);
+    }
+
     function useCard(skipEffect) {
       const player = gameState.players[gameState.currentPlayer];
-      const cardId = gameState.selectedCard;
-      
+      let cardId = gameState.selectedCard;
+
+      // 複製カードの場合、'copy'を消費する
+      if (gameState.copyingCard) {
+        cardId = 'copy';
+        gameState.copyingCard = false;
+      }
+
       animating = false; // アニメーションロック解除
-      
+
       player.cardsUsed[cardId] = (player.cardsUsed[cardId] || 0) + 1;
       player.totalCardsUsed++;
       gameState.selectedCard = null;
@@ -3751,6 +3872,41 @@ const BOARD_SIZE = 7;
       setTimeout(onComplete, 500);
     }
     
+    // 💥 壁破壊: 壁が砕け散るエフェクト
+    function animateWallDestroy(wall, onComplete) {
+      const cells = getWallCells(wall);
+      if (cells.length === 0) { onComplete(); return; }
+
+      cells.forEach(({row, col}, i) => {
+        const cellEl = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+        if (!cellEl) return;
+        const rect = cellEl.getBoundingClientRect();
+
+        const emojis = ['💥', '💫', '🔥'];
+        emojis.forEach((emoji, j) => {
+          const particle = document.createElement('div');
+          particle.textContent = emoji;
+          const angle = ((i * emojis.length + j) / (cells.length * emojis.length)) * Math.PI * 2;
+          const dist = 30 + Math.random() * 40;
+          particle.style.cssText = `
+            position: fixed; z-index: 400; pointer-events: none;
+            left: ${rect.left + rect.width/2 - 10}px; top: ${rect.top + rect.height/2 - 10}px;
+            font-size: 1.2rem; opacity: 1;
+            transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
+          `;
+          document.body.appendChild(particle);
+
+          setTimeout(() => {
+            particle.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(0)`;
+            particle.style.opacity = '0';
+          }, 50);
+          setTimeout(() => particle.remove(), 600);
+        });
+      });
+
+      setTimeout(onComplete, 500);
+    }
+
     // 🐾 足止め: 相手に鎖エフェクト
     function animateFreeze(targetNum, onComplete) {
       const target = gameState.players[targetNum];
@@ -3852,7 +4008,7 @@ const BOARD_SIZE = 7;
         }
       } else if (cardId === 'push') {
         highlightFloor(other.row, other.col, 'highlight-special');
-      } else if (cardId === 'slide' || cardId === 'rotate') {
+      } else if (cardId === 'slide' || cardId === 'rotate' || cardId === 'walldestroy') {
         // 壁のコーナーをハイライト（全ての壁）
         gameState.walls.forEach(wall => {
           const cell = document.querySelector(`.cell[data-row="${wall.cornerRow}"][data-col="${wall.cornerCol}"]`);
@@ -4066,7 +4222,8 @@ const BOARD_SIZE = 7;
         cardPhase: null,
         wallOrientation: 'h',
         previewWall: null,
-        slideTargetWall: null
+        slideTargetWall: null,
+        copyingCard: false
       };
 
       // 履歴をクリア
@@ -4075,6 +4232,7 @@ const BOARD_SIZE = 7;
       document.getElementById('winner-overlay').classList.remove('show');
       document.getElementById('card-modal').classList.remove('show');
       document.getElementById('slide-modal').classList.remove('show');
+      document.getElementById('copy-modal').classList.remove('show');
       setMode('move');
       initBoard();
       highlightValidMoves();
