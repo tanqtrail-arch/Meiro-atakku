@@ -54,7 +54,7 @@ const BOARD_SIZE = 7;
       { id: 'electric_magnet', icon: '🧲', name: '超電導マグネット', desc: '2マス以内の相手を自分の隣に引き寄せる', actionType: 'turn_end', character: 'electric', limit: 1 },
       // 🎓 はかせねこ
       { id: 'prof_wallmachine', icon: '🧪', name: '壁増殖マシン', desc: '手持ちの壁を2枚増やす', actionType: 'move_ok', character: 'professor', limit: 1 },
-      { id: 'prof_copy', icon: '📠', name: 'コピー機', desc: '相手のカードを1枚コピーして使う', actionType: 'turn_end', character: 'professor', limit: 1 },
+      { id: 'prof_copy', icon: '📠', name: 'コピー機', desc: '相手のカードを1枚コピーして手札に加える', actionType: 'turn_end', character: 'professor', limit: 1 },
       { id: 'prof_remote', icon: '🎮', name: 'リモート操作', desc: '2マス以内の相手を1マス自由に動かす', actionType: 'move_ok', character: 'professor', limit: 1 },
       // ⛑️ こうじねこ
       { id: 'construction_move', icon: '🚜', name: '移設工事', desc: '壁を1マス動かす（スライドさせる）', actionType: 'move_ok', character: 'construction', limit: 1 },
@@ -211,7 +211,6 @@ const BOARD_SIZE = 7;
       wallOrientation: 'h', // 'h' or 'v'
       previewWall: null,
       slideTargetWall: null, // スライド対象の壁
-      copyingCard: false, // 複製カード使用中フラグ
       pendingMoveOk: false // 🟢 Move OK: カード使用後の移動許可フラグ
     };
 
@@ -1694,8 +1693,7 @@ const BOARD_SIZE = 7;
         cardPhase: null,
         wallOrientation: 'h',
         previewWall: null,
-        slideTargetWall: null,
-        copyingCard: false
+        slideTargetWall: null
       };
     }
 
@@ -4132,8 +4130,7 @@ const BOARD_SIZE = 7;
       const card = CHARACTER_CARDS.find(c => c.id === cardId);
       if (!card) { switchPlayer(); return; }
 
-      // コピーカード使用時はコピー元のactionTypeに従う（ただしprof_copy自体のturn_endは無視）
-      const effectiveActionType = gameState.copyingCard ? (card.actionType || 'turn_end') : card.actionType;
+      const effectiveActionType = card.actionType;
 
       if (effectiveActionType === 'move_ok') {
         // 🟢 Move OK: 使用後に1マス移動可能
@@ -4332,6 +4329,13 @@ const BOARD_SIZE = 7;
         return;
       }
 
+      // AIの場合は自動でランダムに選択
+      if (gameMode === 'ai' && gameState.currentPlayer === 2) {
+        const pick = opponentCards[Math.floor(Math.random() * opponentCards.length)];
+        executeCopiedCard(pick.id);
+        return;
+      }
+
       document.querySelector('#copy-modal .card-modal h2').textContent = '📠 相手のカードをコピー！';
       showCopyModal(opponentCards);
     }
@@ -4343,8 +4347,6 @@ const BOARD_SIZE = 7;
       cards.forEach(card => {
         const cardEl = document.createElement('div');
         cardEl.className = 'skill-card';
-        const canUse = canUseCard(card.id);
-        if (!canUse) cardEl.classList.add('disabled');
 
         const imgSrc = CARD_IMAGES[card.id];
         if (imgSrc) {
@@ -4359,9 +4361,7 @@ const BOARD_SIZE = 7;
           `;
         }
 
-        if (canUse) {
-          cardEl.onclick = () => executeCopiedCard(card.id);
-        }
+        cardEl.onclick = () => executeCopiedCard(card.id);
 
         grid.appendChild(cardEl);
       });
@@ -4378,45 +4378,26 @@ const BOARD_SIZE = 7;
 
     function executeCopiedCard(cardId) {
       closeCopyModal();
-      gameState.copyingCard = true;
-      gameState.selectedCard = cardId;
+      saveHistory();
 
       const card = SKILL_CARDS.find(c => c.id === cardId);
-      document.getElementById('mode-indicator').textContent = `複製: ${card.icon} ${card.name}`;
-      document.getElementById('mode-indicator2').textContent = `複製: ${card.icon} ${card.name}`;
+      const hand = playerHands[gameState.currentPlayer];
 
-      // 即時実行カード
-      const immediateCards = [
-        'thief_kakureru', 'thief_itadaki',
-        'ghost_kanashibari',
-        'electric_shock',
-        'prof_wallmachine'
-      ];
-      if (immediateCards.includes(cardId)) {
-        executeImmediateCard(cardId);
-        return;
-      }
-
-      // 封印カード
-      if (cardId === 'witch_seal') {
-        showSealModal();
-        return;
-      }
-
-      // ターゲット選択カード
-      gameState.cardPhase = 'selectTarget';
-      highlightCardTargets(cardId);
+      showCardEffect('prof_copy', () => {
+        // 相手のカードを自分の手札に追加
+        if (hand && !hand.includes(cardId)) {
+          hand.push(cardId);
+        }
+        useCard();
+        showToast(`📠 ${card.icon} ${card.name} をコピーした！`, 'info');
+        updateUI();
+        switchPlayer();
+      });
     }
 
     function useCard(skipEffect) {
       const player = gameState.players[gameState.currentPlayer];
       let cardId = gameState.selectedCard;
-
-      // 複製カードの場合、'prof_copy'(or旧'copy')を消費する
-      if (gameState.copyingCard) {
-        cardId = playerHands[gameState.currentPlayer]?.includes('prof_copy') ? 'prof_copy' : 'copy';
-        gameState.copyingCard = false;
-      }
 
       animating = false; // アニメーションロック解除
 
@@ -5234,7 +5215,6 @@ const BOARD_SIZE = 7;
         previewWall: null,
         slideTargetWall: null,
         slideCardId: null,
-        copyingCard: false,
         pendingMoveOk: false
       };
 
