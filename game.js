@@ -3387,6 +3387,12 @@ const BOARD_SIZE = 7;
     function handleCardWallClick(cornerRow, cornerCol) {
       const cardId = gameState.selectedCard;
 
+      // スライド先選択フェーズ: タップした交差点が移動先
+      if (gameState.cardPhase === 'slideSelectDest') {
+        executeSlideToCorner(cornerRow, cornerCol);
+        return;
+      }
+
       // 壁を特定
       const wallIndex = gameState.walls.findIndex(w =>
         w.cornerRow === cornerRow && w.cornerCol === cornerCol
@@ -3398,8 +3404,10 @@ const BOARD_SIZE = 7;
       // スライド系カード: sumo_teppou, construction_move
       if (cardId === 'sumo_teppou' || cardId === 'construction_move' || cardId === 'slide') {
         gameState.slideTargetWall = wall;
-        gameState.slideCardId = cardId; // スライド完了時に使用
-        openSlideModal();
+        gameState.slideCardId = cardId;
+        // 移動可能な交差点をハイライトして選択させる
+        gameState.cardPhase = 'slideSelectDest';
+        highlightSlideDestinations(wall);
       }
       // 回転系カード: construction_rotate, rotate
       else if (cardId === 'construction_rotate' || cardId === 'rotate') {
@@ -3495,6 +3503,80 @@ const BOARD_SIZE = 7;
       const slideModal = document.getElementById('slide-modal');
       slideModal.classList.remove('show', 'rotated-for-p1');
       gameState.slideTargetWall = null;
+    }
+
+    // スライド可能な交差点をハイライトする
+    function highlightSlideDestinations(wall) {
+      clearHighlights();
+      const directions = [[-2, 0], [2, 0], [0, -2], [0, 2]];
+      let hasAny = false;
+      for (const [dr, dc] of directions) {
+        if (checkSlideDirection(wall, dr, dc)) {
+          const destRow = wall.cornerRow + dr;
+          const destCol = wall.cornerCol + dc;
+          const cell = document.querySelector(`.cell[data-row="${destRow}"][data-col="${destCol}"]`);
+          if (cell) {
+            cell.classList.add('highlight-wall');
+            hasAny = true;
+          }
+        }
+      }
+      // 元の壁位置も表示（選択中であることを示す）
+      const origCell = document.querySelector(`.cell[data-row="${wall.cornerRow}"][data-col="${wall.cornerCol}"]`);
+      if (origCell) origCell.classList.add('highlight-corner');
+
+      if (!hasAny) {
+        showToast('この壁はスライドできないよ！', 'warn');
+        gameState.cardPhase = 'selectTarget';
+        gameState.slideTargetWall = null;
+        highlightCardTargets(gameState.selectedCard);
+      }
+    }
+
+    // ハイライトされた交差点をタップしてスライド実行
+    function executeSlideToCorner(cornerRow, cornerCol) {
+      const wall = gameState.slideTargetWall;
+      if (!wall) return;
+
+      // タップした位置が有効なスライド先か判定
+      const dr = cornerRow - wall.cornerRow;
+      const dc = cornerCol - wall.cornerCol;
+      if (!checkSlideDirection(wall, dr, dc)) {
+        // 無効な位置 → 元の壁選択に戻す
+        showToast('そこにはスライドできないよ！', 'warn');
+        return;
+      }
+
+      const newWall = {
+        cornerRow: cornerRow,
+        cornerCol: cornerCol,
+        orientation: wall.orientation,
+        owner: wall.owner
+      };
+
+      const wallIndex = gameState.walls.findIndex(w =>
+        w.cornerRow === wall.cornerRow && w.cornerCol === wall.cornerCol
+      );
+      if (wallIndex === -1) return;
+
+      gameState.walls.splice(wallIndex, 1);
+
+      if (canPlaceWall(newWall)) {
+        const savedOldWall = {...wall};
+        const savedNewWall = {...newWall};
+        const slideCardId = gameState.slideCardId || 'slide';
+        showCardEffect(slideCardId, () => {
+          animateSlide(savedOldWall, savedNewWall, () => {
+            gameState.walls.push(newWall);
+            useCard();
+            renderWalls();
+            afterCardAction(slideCardId);
+          });
+        });
+      } else {
+        gameState.walls.push(wall);
+        showToast('そこにはスライドできないよ！', 'warn');
+      }
     }
 
     function checkSlideDirection(wall, dr, dc) {
@@ -3749,22 +3831,17 @@ const BOARD_SIZE = 7;
       const player = gameState.players[gameState.currentPlayer];
       const hand = playerHands[gameState.currentPlayer];
 
-      // 手札制限: hand が配列なら手札枚数が上限、nullなら従来通りMAX_CARDS_PER_PLAYER
-      const maxCards = hand ? hand.length : MAX_CARDS_PER_PLAYER;
-      if (player.totalCardsUsed >= maxCards) {
-        showToast('カードはもう使えないよ！', 'warn');
-        return;
-      }
-
       // 手札があればそのカードのみ、なければ全カード
       const availableCards = hand
         ? SKILL_CARDS.filter(c => hand.includes(c.id))
         : SKILL_CARDS;
 
+      // 手札制限チェック（表示はするが全カード使用不可になる）
+      const maxCards = hand ? hand.length : MAX_CARDS_PER_PLAYER;
+      const allUsed = player.totalCardsUsed >= maxCards;
+
       const grid = document.getElementById('card-grid');
       grid.innerHTML = '';
-
-      let hasAvailableCard = false;
 
       availableCards.forEach(card => {
         const cardEl = document.createElement('div');
@@ -3773,7 +3850,7 @@ const BOARD_SIZE = 7;
         const usedCount = player.cardsUsed[card.id] || 0;
         const canUseMore = usedCount < card.limit;
         const isSealed = (player.sealedCards[card.id] || 0) > 0;
-        const canUse = canUseMore && !isSealed && canUseCard(card.id);
+        const canUse = !allUsed && canUseMore && !isSealed && canUseCard(card.id);
 
         // カウンターカードは自分のターンには使えない（受動発動のみ）
         const isCounter = card.actionType === 'counter';
@@ -3781,14 +3858,13 @@ const BOARD_SIZE = 7;
 
         if (!finalCanUse) {
           cardEl.classList.add('disabled');
-          if (canUseMore && !isSealed && !isCounter) cardEl.classList.add('available');
+          if (!allUsed && canUseMore && !isSealed && !isCounter) cardEl.classList.add('available');
         }
-        if (finalCanUse) hasAvailableCard = true;
 
         const typeIcon = card.actionType === 'move_act' ? '🔵' : card.actionType === 'move_ok' ? '🟢' : card.actionType === 'turn_end' ? '🔴' : '🟣';
         const imgSrc = CARD_IMAGES[card.id];
         let statusText = '';
-        if (!canUseMore) {
+        if (allUsed || !canUseMore) {
           statusText = '<div class="card-name" style="margin-top:4px;font-size:0.75em;color:#c0392b;">使用済み</div>';
         } else if (isSealed) {
           statusText = `<div class="card-name" style="margin-top:4px;font-size:0.7em;color:#9b59b6;">🤐 封印中（${player.sealedCards[card.id]}ターン）</div>`;
@@ -3818,11 +3894,6 @@ const BOARD_SIZE = 7;
 
         grid.appendChild(cardEl);
       });
-
-      if (!hasAvailableCard) {
-        showToast('使えるカードがないよ！', 'info');
-        return;
-      }
 
       // スクロールヒント（カードが多い場合）
       const existingHint = grid.parentNode.querySelector('.scroll-hint');
