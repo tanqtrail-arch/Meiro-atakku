@@ -13,17 +13,57 @@ const BOARD_SIZE = 7;
     CARD_IMAGES['freeze'] = 'data:image/jpeg;base64,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';
     CARD_IMAGES['wallplus'] = 'data:image/jpeg;base64,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';
 
-    const SKILL_CARDS = [
-      { id: 'swap', icon: '🔄', name: 'いれかえ', desc: '相手と自分のねこの位置をいれかえる', limit: 1 },
-      { id: 'slide', icon: '➡️', name: 'スライド', desc: '壁を1マス横にスライドさせる', limit: 1 },
-      { id: 'dash', icon: '⏩', name: '2マスダッシュ', desc: '2マスすすむことができる', limit: 1 },
-      { id: 'jump', icon: '🦘', name: 'ジャンプ', desc: '相手のねこをまたいでとびこえる', limit: 1 },
-      { id: 'push', icon: '💨', name: 'おしだし', desc: '相手をおして1マスすすむ', limit: 1 },
-      { id: 'rotate', icon: '🔃', name: '回転', desc: '壁を90度回転させる', limit: 1 },
-      { id: 'recover', icon: '♻️', name: '回収', desc: '壁を1枚とりもどす', limit: 1 },
-      { id: 'freeze', icon: '🐾', name: '足止め', desc: '次の相手ターン、移動不可', limit: 1 },
-      { id: 'wallplus', icon: '🧱', name: '壁プラス', desc: '手持ちの壁を2枚増やす', limit: 1 }
+    // ============================================================
+    // === キャラクター＆カードデータ ===
+    // ============================================================
+    const CHARACTERS = [
+      { id: 'ninja', name: 'にんじゃねこ', emoji: '🥷', subtitle: '神出鬼没の隠密猫', desc: 'トリッキーな動きで翻弄する', cards: ['ninja_shinobi', 'ninja_musasabi', 'ninja_kawarimi'] },
+      { id: 'thief', name: 'どろぼうねこ', emoji: '💰', subtitle: '逃げ足の速い怪盗猫', desc: '逃げと奪取の達人', cards: ['thief_zurakaru', 'thief_kakureru', 'thief_itadaki'] },
+      { id: 'sumo', name: 'すもうねこ', emoji: '🌑', subtitle: '怪力無双の横綱猫', desc: '力で盤面を支配する', cards: ['sumo_oshidashi', 'sumo_uwatenage', 'sumo_teppou'] },
+      { id: 'witch', name: 'まじょねこ', emoji: '🔮', subtitle: '魔法を操る不思議猫', desc: '魔法で盤面を自在に操る', cards: ['witch_teleport', 'witch_seal', 'witch_shield'] },
+      { id: 'ghost', name: 'ゆうれいねこ', emoji: '👻', subtitle: '壁を抜ける幽体猫', desc: '幽霊ならではの能力で攻める', cards: ['ghost_walk', 'ghost_kanashibari', 'ghost_hyoui'] },
+      { id: 'electric', name: 'でんきねこ', emoji: '⚡', subtitle: 'シビれる稲妻猫', desc: '高速移動と感電で封じる', cards: ['electric_raiden', 'electric_shock', 'electric_magnet'] },
+      { id: 'professor', name: 'はかせねこ', emoji: '🎓', subtitle: '発明好きの天才猫', desc: '発明品で戦況を変える', cards: ['prof_wallmachine', 'prof_copy', 'prof_remote'] },
+      { id: 'construction', name: 'こうじねこ', emoji: '⛑️', subtitle: '現場一筋の職人猫', desc: '迷路そのものを作り替える', cards: ['construction_move', 'construction_rotate', 'construction_blast'] }
     ];
+
+    const CHARACTER_CARDS = [
+      // 🥷 にんじゃねこ
+      { id: 'ninja_shinobi', icon: '🥷', name: '忍び足', desc: '斜め方向に1マス移動する（壁は越えられない）', actionType: 'move_act', character: 'ninja', limit: 1 },
+      { id: 'ninja_musasabi', icon: '🦅', name: 'ムササビの術', desc: '1マス以内にいる相手を飛び越えて移動する', actionType: 'move_act', character: 'ninja', limit: 1 },
+      { id: 'ninja_kawarimi', icon: '🍃', name: '変わり身の術', desc: '【カウンター】妨害を無効化して別のマスへ移動', actionType: 'counter', character: 'ninja', limit: 1 },
+      // 💰 どろぼうねこ
+      { id: 'thief_zurakaru', icon: '💨', name: 'ずらかる', desc: '横方向に2マス移動できる（間の壁は無視）', actionType: 'move_act', character: 'thief', limit: 1 },
+      { id: 'thief_kakureru', icon: '🃏', name: '隠れる', desc: '次のターンの間、相手のカード効果を受けない', actionType: 'move_ok', character: 'thief', limit: 1 },
+      { id: 'thief_itadaki', icon: '🧱', name: 'いただき', desc: '相手の持ち壁を1枚盗んで自分のものにする', actionType: 'move_ok', character: 'thief', limit: 1 },
+      // 🌑 すもうねこ
+      { id: 'sumo_oshidashi', icon: '✋', name: '押し出し', desc: '隣の相手を1マス後ろへ押し下げる', actionType: 'move_ok', character: 'sumo', limit: 1 },
+      { id: 'sumo_uwatenage', icon: '🔄', name: '上手投げ', desc: '隣接する相手を反対側に2マス投げ飛ばす', actionType: 'turn_end', character: 'sumo', limit: 1 },
+      { id: 'sumo_teppou', icon: '💥', name: '鉄砲柱', desc: '壁を1マス動かす（スライドさせる）', actionType: 'move_ok', character: 'sumo', limit: 1 },
+      // 🔮 まじょねこ
+      { id: 'witch_teleport', icon: '🌀', name: 'テレポート', desc: '横一列の好きなマスへ移動（壁無視・入れ替わり）', actionType: 'move_act', character: 'witch', limit: 1 },
+      { id: 'witch_seal', icon: '🤐', name: '呪いの封印', desc: '相手のカード1枚を2ターン使用不可にする', actionType: 'move_ok', character: 'witch', limit: 1 },
+      { id: 'witch_shield', icon: '🛡️', name: '魔法の盾', desc: '【カウンター】相手の妨害カードを1回無効化', actionType: 'counter', character: 'witch', limit: 1 },
+      // 👻 ゆうれいねこ
+      { id: 'ghost_walk', icon: '👻', name: 'ゴーストウォーク', desc: '壁を1枚すり抜けて移動できる', actionType: 'move_act', character: 'ghost', limit: 1 },
+      { id: 'ghost_kanashibari', icon: '🥶', name: '金縛り', desc: '次の相手ターン、相手は移動できなくなる', actionType: 'turn_end', character: 'ghost', limit: 1 },
+      { id: 'ghost_hyoui', icon: '👻', name: '憑依', desc: '相手を1マス自由に動かす（操る）', actionType: 'move_ok', character: 'ghost', limit: 1 },
+      // ⚡ でんきねこ
+      { id: 'electric_raiden', icon: '⚡', name: '電光石火', desc: '自由に2マス移動できる（壁は越えられない）', actionType: 'move_act', character: 'electric', limit: 1 },
+      { id: 'electric_shock', icon: '⚡', name: '感電ショック', desc: '隣の相手の移動を2ターン封じる', actionType: 'turn_end', character: 'electric', limit: 1 },
+      { id: 'electric_magnet', icon: '🧲', name: '超電導マグネット', desc: '2マス以内の相手を自分の隣に引き寄せる', actionType: 'turn_end', character: 'electric', limit: 1 },
+      // 🎓 はかせねこ
+      { id: 'prof_wallmachine', icon: '🧪', name: '壁増殖マシン', desc: '手持ちの壁を2枚増やす', actionType: 'move_ok', character: 'professor', limit: 1 },
+      { id: 'prof_copy', icon: '📠', name: 'コピー機', desc: '相手のカードを1枚コピーして使う', actionType: 'turn_end', character: 'professor', limit: 1 },
+      { id: 'prof_remote', icon: '🎮', name: 'リモート操作', desc: '2マス以内の相手を1マス自由に動かす', actionType: 'move_ok', character: 'professor', limit: 1 },
+      // ⛑️ こうじねこ
+      { id: 'construction_move', icon: '🚜', name: '移設工事', desc: '壁を1マス動かす（スライドさせる）', actionType: 'move_ok', character: 'construction', limit: 1 },
+      { id: 'construction_rotate', icon: '🔄', name: '回転工事', desc: '壁を90度回転させる', actionType: 'move_ok', character: 'construction', limit: 1 },
+      { id: 'construction_blast', icon: '🧨', name: '発破', desc: '盤上の壁を1枚選んで完全に破壊する', actionType: 'turn_end', character: 'construction', limit: 1 }
+    ];
+
+    // 後方互換
+    const SKILL_CARDS = CHARACTER_CARDS;
 
     const AI_FACES = {
       easy: '😺',
@@ -37,6 +77,9 @@ const BOARD_SIZE = 7;
     let cardDistMode = 'all'; // 'all'(従来), 'choose'(選択), 'random'(ランダム)
     // 手札: null=全カード使える(従来/AI), 配列=その手札のみ
     let playerHands = { 1: null, 2: null };
+
+    // キャラクター選択状態
+    let playerCharacters = { 1: null, 2: null }; // 各プレイヤーが選んだキャラクターID
 
     // AI学習データ（事前学習済み - 1000戦でAIが889勝）
     // AIはプレイヤー（ちゃとら）が下の白マスに行くのを妨害する壁を学習
@@ -158,8 +201,8 @@ const BOARD_SIZE = 7;
       mode: 'move',
       turn: 1, // 現在のターン数
       players: {
-        1: { row: 0, col: 3, walls: 6, emoji: '🐈', color: '#ffffff', cardsUsed: {}, totalCardsUsed: 0, frozen: false },
-        2: { row: 6, col: 3, walls: 6, emoji: '🐈‍⬛', color: '#333333', cardsUsed: {}, totalCardsUsed: 0, frozen: false }
+        1: { row: 0, col: 3, walls: 6, emoji: '🐈', color: '#ffffff', cardsUsed: {}, totalCardsUsed: 0, frozen: false, frozenTurns: 0, hidden: false, sealedCards: {} },
+        2: { row: 6, col: 3, walls: 6, emoji: '🐈‍⬛', color: '#333333', cardsUsed: {}, totalCardsUsed: 0, frozen: false, frozenTurns: 0, hidden: false, sealedCards: {} }
       },
       walls: [], // [{cornerRow, cornerCol, orientation}]
       gameOver: false,
@@ -167,7 +210,9 @@ const BOARD_SIZE = 7;
       cardPhase: null,
       wallOrientation: 'h', // 'h' or 'v'
       previewWall: null,
-      slideTargetWall: null // スライド対象の壁
+      slideTargetWall: null, // スライド対象の壁
+      copyingCard: false, // 複製カード使用中フラグ
+      pendingMoveOk: false // 🟢 Move OK: カード使用後の移動許可フラグ
     };
 
     // 履歴スタック（一手戻る用）
@@ -241,17 +286,102 @@ const BOARD_SIZE = 7;
       gameMode = mode;
       aiDifficulty = difficulty;
 
-      if (mode === 'pvp') {
-        // 二人対戦 → カード配布モード選択を表示
-        document.getElementById('mode-select').classList.add('hidden');
-        document.getElementById('card-mode-select').classList.add('show');
-        return;
-      }
+      // キャラクター選択画面へ
+      document.getElementById('mode-select').classList.add('hidden');
+      document.getElementById('ai-select').classList.add('hidden');
+      playerCharacters = { 1: null, 2: null };
+      showCharacterSelect(1);
+    }
 
-      // AI対戦 → 従来通り全カード使用可能
-      cardDistMode = 'all';
-      playerHands = { 1: null, 2: null };
-      launchGame();
+    // キャラクター選択画面を表示
+    function showCharacterSelect(playerNum) {
+      const modal = document.getElementById('card-draft-modal');
+      const isAI = gameMode === 'ai';
+      const name = playerNum === 1 ? 'ちゃとら 🐈' : (isAI ? 'CPU' : 'くろねこ 🐈‍⬛');
+      const otherName = playerNum === 1 ? (isAI ? 'CPU' : 'くろねこ') : 'ちゃとら';
+      const otherChar = playerCharacters[playerNum === 1 ? 2 : 1];
+
+      let html = `
+        <div class="handoff-screen">
+          <div class="handoff-cat">${playerNum === 1 ? '🐈' : '🐈‍⬛'}</div>
+          <div class="handoff-msg">${name} のキャラをえらぼう！</div>
+          ${playerNum === 2 && !isAI ? `<div class="handoff-secret">🙈 ${otherName} は みないでね！</div>` : ''}
+          <div class="char-select-grid">
+      `;
+
+      CHARACTERS.forEach(char => {
+        const isUsed = otherChar === char.id;
+        html += `
+          <div class="char-select-card${isUsed ? ' disabled' : ''}" ${isUsed ? '' : `onclick="selectCharacter(${playerNum}, '${char.id}')"`}>
+            <div class="char-emoji">${char.emoji}</div>
+            <div class="char-name">${char.name}</div>
+            <div class="char-subtitle">${char.subtitle}</div>
+            <div class="char-cards-preview">
+              ${char.cards.map(cid => {
+                const c = CHARACTER_CARDS.find(cc => cc.id === cid);
+                const typeIcon = c.actionType === 'move_act' ? '🔵' : c.actionType === 'move_ok' ? '🟢' : c.actionType === 'turn_end' ? '🔴' : '🟣';
+                return `<div class="char-card-mini">${typeIcon} ${c.icon} ${c.name}</div>`;
+              }).join('')}
+            </div>
+            ${isUsed ? '<div class="char-used">あいてが せんたくずみ</div>' : ''}
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      html += `<button class="card-mode-back" onclick="backFromCharSelect(${playerNum})">← もどる</button>`;
+      html += `</div>`;
+
+      modal.innerHTML = html;
+      document.getElementById('card-draft').classList.add('show');
+    }
+
+    function selectCharacter(playerNum, charId) {
+      playerCharacters[playerNum] = charId;
+      const char = CHARACTERS.find(c => c.id === charId);
+      playerHands[playerNum] = [...char.cards];
+
+      if (playerNum === 1) {
+        if (gameMode === 'ai') {
+          // AIにランダムでキャラを割り当て（プレイヤーと被らない）
+          const available = CHARACTERS.filter(c => c.id !== charId);
+          const aiChar = available[Math.floor(Math.random() * available.length)];
+          playerCharacters[2] = aiChar.id;
+          playerHands[2] = [...aiChar.cards];
+          document.getElementById('card-draft').classList.remove('show');
+          launchGame();
+        } else {
+          // PvP → P2のキャラ選択へ（ハンドオフ画面を経由）
+          showCharSelectHandoff(2);
+        }
+      } else {
+        // P2完了 → ゲーム開始
+        document.getElementById('card-draft').classList.remove('show');
+        launchGame();
+      }
+    }
+
+    function showCharSelectHandoff(playerNum) {
+      const modal = document.getElementById('card-draft-modal');
+      const name = playerNum === 1 ? 'ちゃとら 🐈' : 'くろねこ 🐈‍⬛';
+      const otherName = playerNum === 1 ? 'くろねこ' : 'ちゃとら';
+      modal.innerHTML = `
+        <div class="handoff-screen">
+          <div class="handoff-cat">${playerNum === 1 ? '🐈' : '🐈‍⬛'}</div>
+          <div class="handoff-msg">${name} がキャラを えらぶばん！</div>
+          <div class="handoff-secret">🙈 ${otherName} は みないでね！</div>
+          <button class="handoff-btn" onclick="showCharacterSelect(${playerNum})">じゅんび OK！</button>
+        </div>
+      `;
+    }
+
+    function backFromCharSelect(playerNum) {
+      document.getElementById('card-draft').classList.remove('show');
+      if (playerNum === 1) {
+        document.getElementById('mode-select').classList.remove('hidden');
+      } else {
+        showCharacterSelect(1);
+      }
     }
 
     function launchGame() {
@@ -261,17 +391,26 @@ const BOARD_SIZE = 7;
       document.getElementById('card-draft').classList.remove('show');
       document.getElementById('game-container').classList.remove('hidden');
 
+      // プレイヤー名にキャラ情報を表示
+      const char1 = CHARACTERS.find(c => c.id === playerCharacters[1]);
+      const char2 = CHARACTERS.find(c => c.id === playerCharacters[2]);
+
       if (gameMode === 'ai') {
         document.getElementById('game-container').classList.add('ai-mode');
         let aiName = aiDifficulty === 'easy' ? 'こねこ' : aiDifficulty === 'medium' ? 'おとなねこ' : 'ボスねこ';
         if (aiDifficulty === 'hard' && aiLearningData.trained) {
           aiName = 'ボスねこ+';
         }
+        document.querySelector('#player1-info .player-name').textContent =
+          `${char1 ? char1.emoji : '🐈'} ${char1 ? char1.name : 'ちゃとら'} ⬇️`;
         document.querySelector('#player2-info .player-name').textContent =
-          `⬆️ ${aiName} ${AI_FACES[aiDifficulty]}`;
+          `⬆️ ${aiName} ${char2 ? char2.emoji : AI_FACES[aiDifficulty]}`;
       } else {
         document.getElementById('game-container').classList.remove('ai-mode');
-        document.querySelector('#player2-info .player-name').textContent = '⬆️ くろねこ 🐈‍⬛';
+        document.querySelector('#player1-info .player-name').textContent =
+          `${char1 ? char1.emoji : '🐈'} ${char1 ? char1.name : 'ちゃとら'} ⬇️`;
+        document.querySelector('#player2-info .player-name').textContent =
+          `⬆️ ${char2 ? char2.name : 'くろねこ'} ${char2 ? char2.emoji : '🐈‍⬛'}`;
       }
 
       resetGame();
@@ -1555,7 +1694,8 @@ const BOARD_SIZE = 7;
         cardPhase: null,
         wallOrientation: 'h',
         previewWall: null,
-        slideTargetWall: null
+        slideTargetWall: null,
+        copyingCard: false
       };
     }
 
@@ -1675,83 +1815,111 @@ const BOARD_SIZE = 7;
     function aiConsiderCard() {
       const ai = gameState.players[2];
       const player = gameState.players[1];
-      if (ai.totalCardsUsed >= MAX_CARDS_PER_PLAYER) return null;
+      const aiHand = playerHands[2];
+      if (!aiHand) return null;
+
+      const maxCards = aiHand.length;
+      if (ai.totalCardsUsed >= maxCards) return null;
 
       const aiPath = findShortestPath(ai.row, ai.col, 0);
       const playerPath = findShortestPath(player.row, player.col, BOARD_SIZE - 1);
       const aiDist = aiPath ? aiPath.length : 999;
       const playerDist = playerPath ? playerPath.length : 999;
       const usedCard = (id) => (ai.cardsUsed[id] || 0) >= 1;
-      const isLearned = aiLearningData.trained;
+      const hasCard = (id) => aiHand.includes(id) && !usedCard(id) && !((ai.sealedCards[id] || 0) > 0);
+      const dist = Math.abs(ai.row - player.row) + Math.abs(ai.col - player.col);
+      const adjacent = isAdjacentFor(2);
 
-      // freeze: 相手がゴールに近いとき足止め（最優先の妨害カード）
-      if (!usedCard('freeze') && playerDist <= 5 && gameState.turn >= 2) {
-        // ボスねこ+はより積極的に使う
-        if (isLearned || playerDist <= 3) {
-          return { type: 'card', cardId: 'freeze' };
-        }
+      // === 移動妨害系カード（高優先度）===
+      // 金縛り / 感電ショック
+      if (hasCard('ghost_kanashibari') && playerDist <= 4) {
+        return { type: 'card', cardId: 'ghost_kanashibari' };
+      }
+      if (hasCard('electric_shock') && adjacent && playerDist <= 5) {
+        return { type: 'card', cardId: 'electric_shock' };
       }
 
-      // dash: 2マス進めるなら活用（ゴール6歩以内に拡大）
-      if (!usedCard('dash') && aiDist <= 6 && hasDashTargetFor(2)) {
-        // ダッシュ先でゴールに近づけるか確認
-        const dashTarget = getBestDashTarget(2);
-        if (dashTarget) {
-          const dashPath = findShortestPath(dashTarget.row, dashTarget.col, 0);
-          const dashDist = dashPath ? dashPath.length : 999;
-          if (dashDist < aiDist - 1) {
-            return { type: 'card', cardId: 'dash' };
-          }
-        }
-        // ボスねこ+: ゴール4歩以内なら条件緩和
-        if (isLearned && aiDist <= 4) {
-          return { type: 'card', cardId: 'dash' };
-        }
+      // === 移動系カード（ゴールに近づける）===
+      // 電光石火: 2マス自由移動
+      if (hasCard('electric_raiden') && aiDist <= 5) {
+        return { type: 'card', cardId: 'electric_raiden' };
+      }
+      // ムササビの術: 相手を飛び越え
+      if (hasCard('ninja_musasabi') && adjacent && canJumpOverFor(2)) {
+        const jt = getJumpTarget(2);
+        if (jt && jt.row < ai.row) return { type: 'card', cardId: 'ninja_musasabi' };
+      }
+      // 忍び足: 斜め移動
+      if (hasCard('ninja_shinobi') && aiDist <= 4) {
+        return { type: 'card', cardId: 'ninja_shinobi' };
+      }
+      // ゴーストウォーク: 壁すり抜け
+      if (hasCard('ghost_walk') && aiDist <= 4) {
+        return { type: 'card', cardId: 'ghost_walk' };
+      }
+      // ずらかる: 横2マス
+      if (hasCard('thief_zurakaru') && aiDist <= 5) {
+        return { type: 'card', cardId: 'thief_zurakaru' };
+      }
+      // テレポート
+      if (hasCard('witch_teleport') && aiDist <= 4) {
+        return { type: 'card', cardId: 'witch_teleport' };
       }
 
-      // swap: 入れ替えで有利になるなら使う（マンハッタン距離≤2かつ3ターン目以降）
-      if (!usedCard('swap') && gameState.turn >= 3) {
-        const swapDist = Math.abs(ai.row - player.row) + Math.abs(ai.col - player.col);
-        if (swapDist <= 2) {
-          const swappedAiPath = findShortestPath(player.row, player.col, 0);
-          const swappedAiDist = swappedAiPath ? swappedAiPath.length : 999;
-          const swappedPlayerPath = findShortestPath(ai.row, ai.col, BOARD_SIZE - 1);
-          const swappedPlayerDist = swappedPlayerPath ? swappedPlayerPath.length : 999;
-          // 入れ替え後に自分が有利になり、相手も不利になるか
-          const myGain = aiDist - swappedAiDist;
-          const opLoss = swappedPlayerDist - playerDist;
-          if (myGain + opLoss >= 3 || (isLearned && myGain >= 2)) {
-            return { type: 'card', cardId: 'swap' };
-          }
-        }
+      // === 相手操作系カード ===
+      // 押し出し
+      if (hasCard('sumo_oshidashi') && adjacent && canPushFor(2)) {
+        return { type: 'card', cardId: 'sumo_oshidashi' };
+      }
+      // 上手投げ
+      if (hasCard('sumo_uwatenage') && adjacent) {
+        return { type: 'card', cardId: 'sumo_uwatenage' };
+      }
+      // 憑依 / リモート操作
+      if (hasCard('ghost_hyoui') && dist <= 2) {
+        return { type: 'card', cardId: 'ghost_hyoui' };
+      }
+      if (hasCard('prof_remote') && dist <= 2) {
+        return { type: 'card', cardId: 'prof_remote' };
+      }
+      // 超電導マグネット
+      if (hasCard('electric_magnet') && dist <= 2 && dist > 0) {
+        return { type: 'card', cardId: 'electric_magnet' };
       }
 
-      // jump: 隣接していてジャンプでゴール方向に進める
-      if (!usedCard('jump') && isAdjacentFor(2) && canJumpOverFor(2)) {
-        const jumpTarget = getJumpTarget(2);
-        if (jumpTarget && jumpTarget.row < ai.row) {
-          return { type: 'card', cardId: 'jump' };
-        }
+      // === 壁操作系カード ===
+      if (hasCard('prof_wallmachine') && ai.walls <= 1) {
+        return { type: 'card', cardId: 'prof_wallmachine' };
+      }
+      if (hasCard('thief_itadaki') && player.walls > 0) {
+        return { type: 'card', cardId: 'thief_itadaki' };
+      }
+      if (hasCard('construction_blast') && gameState.walls.length > 0 && aiDist > playerDist) {
+        return { type: 'card', cardId: 'construction_blast' };
       }
 
-      // push: 隣接していてプッシュで有利になる
-      if (!usedCard('push') && isAdjacentFor(2) && canPushFor(2)) {
-        // 相手をゴールから遠ざけられるなら使用
-        const dr = player.row - ai.row;
-        const dc = player.col - ai.col;
-        const pushDest = { row: player.row + dr, col: player.col + dc };
-        if (pushDest.row >= 0 && pushDest.row < BOARD_SIZE) {
-          const pushPlayerPath = findShortestPath(pushDest.row, pushDest.col, BOARD_SIZE - 1);
-          const pushPlayerDist = pushPlayerPath ? pushPlayerPath.length : 999;
-          if (pushPlayerDist > playerDist || ai.row > player.row) {
-            return { type: 'card', cardId: 'push' };
-          }
-        }
+      // === 封印系 ===
+      if (hasCard('witch_seal') && playerDist <= 5) {
+        return { type: 'card', cardId: 'witch_seal' };
       }
 
-      // wallplus: 壁が足りないとき壁を補充
-      if (!usedCard('wallplus') && ai.walls <= 1 && gameState.turn < 40 && playerDist <= aiDist + 2) {
-        return { type: 'card', cardId: 'wallplus' };
+      // === 隠れる / コピー ===
+      if (hasCard('thief_kakureru') && playerDist <= 3) {
+        return { type: 'card', cardId: 'thief_kakureru' };
+      }
+      if (hasCard('prof_copy')) {
+        return { type: 'card', cardId: 'prof_copy' };
+      }
+
+      // 壁スライド系（状況に応じて）
+      if (hasCard('sumo_teppou') && gameState.walls.length > 0) {
+        return { type: 'card', cardId: 'sumo_teppou' };
+      }
+      if (hasCard('construction_move') && gameState.walls.length > 0) {
+        return { type: 'card', cardId: 'construction_move' };
+      }
+      if (hasCard('construction_rotate') && gameState.walls.length > 0) {
+        return { type: 'card', cardId: 'construction_rotate' };
       }
 
       return null;
@@ -1855,28 +2023,35 @@ const BOARD_SIZE = 7;
       }
 
       if (action.type === 'card') {
-        // AIのカード使用（ゲームルールで使用可能か最終チェック）
-        if (!canUseCard(action.cardId)) {
-          // ルール上使用不可 → カードをスキップして通常行動にフォールバック
+        const cid = action.cardId;
+        // AIの手札にあるか＆ゲームルールで使用可能か最終チェック
+        const aiHand = playerHands[2];
+        if (!aiHand || !aiHand.includes(cid) || !canUseCard(cid)) {
           gameState.selectedCard = null;
-          switchPlayer();
+          // カードが無効なら通常移動にフォールバック
+          const moves = getValidMoves(2);
+          if (moves.length > 0) {
+            const ai = gameState.players[2];
+            ai.row = moves[0].row;
+            ai.col = moves[0].col;
+            renderCats(2);
+            checkWin();
+          }
+          if (!gameState.gameOver) switchPlayer();
           return;
         }
         saveHistory();
-        gameState.selectedCard = action.cardId;
-        if (action.cardId === 'swap') {
-          executeSwap();
-        } else if (action.cardId === 'freeze') {
-          executeFreeze();
-        } else if (action.cardId === 'wallplus') {
-          executeWallPlus();
-        } else if (action.cardId === 'dash') {
-          aiExecuteDash();
-        } else if (action.cardId === 'jump') {
-          aiExecuteJump();
-        } else if (action.cardId === 'push') {
-          aiExecutePush();
+        gameState.selectedCard = cid;
+
+        // 即時実行カード
+        const immediateCards = ['thief_kakureru', 'thief_itadaki', 'ghost_kanashibari', 'electric_shock', 'prof_wallmachine', 'prof_copy'];
+        if (immediateCards.includes(cid)) {
+          executeImmediateCard(cid);
+          return;
         }
+
+        // ターゲット選択が必要なカード → AI自動選択
+        aiExecuteTargetCard(cid);
         return;
       }
 
@@ -1990,6 +2165,246 @@ const BOARD_SIZE = 7;
           if (!gameState.gameOver) switchPlayer();
         });
       });
+    }
+
+    // AI用: 新キャラカードのターゲット自動選択＆実行
+    function aiExecuteTargetCard(cardId) {
+      const ai = gameState.players[2];
+      const player = gameState.players[1];
+
+      const doMove = (row, col) => {
+        showCardEffect(cardId, () => {
+          ai.row = row;
+          ai.col = col;
+          useCard();
+          renderCats(2);
+          checkWin();
+          if (!gameState.gameOver) afterCardAction(cardId);
+        });
+      };
+
+      const doMoveOther = (row, col) => {
+        showCardEffect(cardId, () => {
+          player.row = row;
+          player.col = col;
+          useCard();
+          renderCats();
+          checkWin();
+          if (!gameState.gameOver) afterCardAction(cardId);
+        });
+      };
+
+      const fallback = () => { gameState.selectedCard = null; switchPlayer(); };
+
+      // ゴール方向に最も近づけるマスを選ぶヘルパー
+      const bestMoveToGoal = (candidates) => {
+        let best = null, bestDist = Infinity;
+        for (const {row, col} of candidates) {
+          const p = findShortestPath(row, col, 0);
+          const d = p ? p.length : 999;
+          if (d < bestDist) { bestDist = d; best = {row, col}; }
+        }
+        return best;
+      };
+
+      switch (cardId) {
+        case 'ninja_shinobi': {
+          const cands = [];
+          for (const [dr,dc] of [[-1,-1],[-1,1],[1,-1],[1,1]]) {
+            const nr = ai.row+dr, nc = ai.col+dc;
+            if (nr<0||nr>=BOARD_SIZE||nc<0||nc>=BOARD_SIZE) continue;
+            if (nr===player.row && nc===player.col) continue;
+            if (!isWallBetween(ai.row, ai.col, ai.row+dr, ai.col) &&
+                !isWallBetween(ai.row+dr, ai.col, nr, nc)) {
+              cands.push({row:nr, col:nc});
+            }
+          }
+          const t = bestMoveToGoal(cands);
+          if (t) doMove(t.row, t.col); else fallback();
+          break;
+        }
+        case 'ninja_musasabi': {
+          const jt = getJumpTarget(2);
+          if (jt) doMove(jt.row, jt.col); else fallback();
+          break;
+        }
+        case 'thief_zurakaru': {
+          const cands = [];
+          for (const dc of [-2, 2]) {
+            const nc = ai.col + dc;
+            if (nc >= 0 && nc < BOARD_SIZE && !(ai.row === player.row && nc === player.col)) {
+              cands.push({row: ai.row, col: nc});
+            }
+          }
+          const t = bestMoveToGoal(cands);
+          if (t) doMove(t.row, t.col); else fallback();
+          break;
+        }
+        case 'sumo_oshidashi': {
+          const dr = player.row - ai.row;
+          const dc = player.col - ai.col;
+          const pushRow = player.row + dr;
+          const pushCol = player.col + dc;
+          if (pushRow>=0 && pushRow<BOARD_SIZE && pushCol>=0 && pushCol<BOARD_SIZE &&
+              !isWallBetween(player.row, player.col, pushRow, pushCol)) {
+            showCardEffect(cardId, () => {
+              player.row = pushRow;
+              player.col = pushCol;
+              useCard();
+              renderCats();
+              checkWin();
+              if (!gameState.gameOver) afterCardAction(cardId);
+            });
+          } else fallback();
+          break;
+        }
+        case 'sumo_uwatenage': {
+          const dr = player.row - ai.row;
+          const dc = player.col - ai.col;
+          let throwRow = ai.row - dr;
+          let throwCol = ai.col - dc;
+          throwRow = Math.max(0, Math.min(BOARD_SIZE-1, throwRow));
+          throwCol = Math.max(0, Math.min(BOARD_SIZE-1, throwCol));
+          if (throwRow === ai.row && throwCol === ai.col) { fallback(); break; }
+          doMoveOther(throwRow, throwCol);
+          break;
+        }
+        case 'witch_teleport': {
+          const cands = [];
+          for (let c = 0; c < BOARD_SIZE; c++) {
+            if (c !== ai.col) cands.push({row: ai.row, col: c});
+          }
+          const t = bestMoveToGoal(cands);
+          if (t) {
+            showCardEffect(cardId, () => {
+              if (t.row === player.row && t.col === player.col) {
+                player.row = ai.row; player.col = ai.col;
+              }
+              ai.row = t.row; ai.col = t.col;
+              useCard();
+              renderCats(2);
+              checkWin();
+              if (!gameState.gameOver) afterCardAction(cardId);
+            });
+          } else fallback();
+          break;
+        }
+        case 'witch_seal': {
+          // 相手の未使用カードからランダムに封印
+          const otherHand = playerHands[1];
+          if (otherHand) {
+            const sealable = otherHand.filter(cid =>
+              !((player.cardsUsed[cid]||0)>=1) && !((player.sealedCards[cid]||0)>0)
+            );
+            if (sealable.length > 0) {
+              const target = sealable[Math.floor(Math.random()*sealable.length)];
+              showCardEffect(cardId, () => {
+                player.sealedCards[target] = 2;
+                useCard();
+                afterCardAction(cardId);
+              });
+            } else fallback();
+          } else fallback();
+          break;
+        }
+        case 'ghost_walk': {
+          // 壁を無視して隣接マスの最善を選ぶ
+          const cands = [];
+          for (const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+            const nr = ai.row+dr, nc = ai.col+dc;
+            if (nr>=0 && nr<BOARD_SIZE && nc>=0 && nc<BOARD_SIZE && !(nr===player.row && nc===player.col)) {
+              cands.push({row:nr, col:nc});
+            }
+          }
+          const t = bestMoveToGoal(cands);
+          if (t) doMove(t.row, t.col); else fallback();
+          break;
+        }
+        case 'ghost_hyoui':
+        case 'prof_remote': {
+          // 相手をゴールから遠ざける方向に動かす
+          const cands = [];
+          for (const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+            const nr = player.row+dr, nc = player.col+dc;
+            if (nr>=0 && nr<BOARD_SIZE && nc>=0 && nc<BOARD_SIZE &&
+                !(nr===ai.row && nc===ai.col) && !isWallBetween(player.row, player.col, nr, nc)) {
+              cands.push({row:nr, col:nc});
+            }
+          }
+          // 相手がゴール(row=BOARD_SIZE-1)から最も遠ざかるマスを選ぶ
+          let best = null, bestScore = -Infinity;
+          for (const c of cands) {
+            const p = findShortestPath(c.row, c.col, BOARD_SIZE-1);
+            const d = p ? p.length : 999;
+            if (d > bestScore) { bestScore = d; best = c; }
+          }
+          if (best) doMoveOther(best.row, best.col); else fallback();
+          break;
+        }
+        case 'electric_raiden': {
+          // 2歩以内の最善マス
+          const cands = [];
+          for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+              if (r===ai.row && c===ai.col) continue;
+              if (r===player.row && c===player.col) continue;
+              const d = Math.abs(r-ai.row) + Math.abs(c-ai.col);
+              if (d <= 2 && canReachInSteps(ai.row, ai.col, r, c, 2, player)) {
+                cands.push({row:r, col:c});
+              }
+            }
+          }
+          const t = bestMoveToGoal(cands);
+          if (t) doMove(t.row, t.col); else fallback();
+          break;
+        }
+        case 'electric_magnet': {
+          // 自分の隣にプレイヤーを引き寄せ（ゴール方向から遠い側）
+          const cands = [];
+          for (const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+            const nr = ai.row+dr, nc = ai.col+dc;
+            if (nr>=0 && nr<BOARD_SIZE && nc>=0 && nc<BOARD_SIZE && !(nr===player.row && nc===player.col)) {
+              cands.push({row:nr, col:nc});
+            }
+          }
+          let best = null, bestScore = -Infinity;
+          for (const c of cands) {
+            const p = findShortestPath(c.row, c.col, BOARD_SIZE-1);
+            const d = p ? p.length : 999;
+            if (d > bestScore) { bestScore = d; best = c; }
+          }
+          if (best) doMoveOther(best.row, best.col); else fallback();
+          break;
+        }
+        // 壁操作系: AIは壁カードを簡易的に処理
+        case 'sumo_teppou':
+        case 'construction_move':
+        case 'construction_rotate':
+        case 'construction_blast': {
+          if (gameState.walls.length > 0) {
+            // プレイヤーの経路上にある壁を操作（簡易: 最初の壁をターゲット）
+            const targetWall = gameState.walls[0];
+            if (cardId === 'construction_blast' || cardId === 'walldestroy') {
+              showCardEffect(cardId, () => {
+                const idx = gameState.walls.findIndex(w =>
+                  w.cornerRow === targetWall.cornerRow && w.cornerCol === targetWall.cornerCol
+                );
+                if (idx !== -1) gameState.walls.splice(idx, 1);
+                useCard();
+                renderWalls();
+                updateUI();
+                afterCardAction(cardId);
+              });
+            } else {
+              // スライド/回転はスキップ（AI壁操作は難しいので移動にフォールバック）
+              fallback();
+            }
+          } else fallback();
+          break;
+        }
+        default:
+          fallback();
+      }
     }
 
     // 有効な移動先を取得
@@ -2452,8 +2867,12 @@ const BOARD_SIZE = 7;
 
           renderCats(gameState.currentPlayer);
           checkWin();
-          
+
           if (!gameState.gameOver) {
+            // Move OK後の移動ならターン終了
+            if (gameState.pendingMoveOk) {
+              gameState.pendingMoveOk = false;
+            }
             switchPlayer();
           }
         }
@@ -2687,94 +3106,30 @@ const BOARD_SIZE = 7;
     }
 
     function handleCardFloorClick(boardRow, boardCol) {
-      const card = gameState.selectedCard;
+      const cardId = gameState.selectedCard;
       const player = gameState.players[gameState.currentPlayer];
       const otherNum = gameState.currentPlayer === 1 ? 2 : 1;
       const other = gameState.players[otherNum];
+      const pNum = gameState.currentPlayer;
 
-      if (card === 'dash') {
+      // === にんじゃねこ: 忍び足（斜め1マス移動） ===
+      if (cardId === 'ninja_shinobi') {
         const dr = boardRow - player.row;
         const dc = boardCol - player.col;
-        
-        if ((Math.abs(dr) === 2 && dc === 0) || (dr === 0 && Math.abs(dc) === 2)) {
-          const midRow = player.row + dr / 2;
-          const midCol = player.col + dc / 2;
-          
-          if (!isWallBetween(player.row, player.col, midRow, midCol) &&
-              !isWallBetween(midRow, midCol, boardRow, boardCol)) {
+        if (Math.abs(dr) === 1 && Math.abs(dc) === 1) {
+          if (boardRow >= 0 && boardRow < BOARD_SIZE && boardCol >= 0 && boardCol < BOARD_SIZE) {
             if (!(boardRow === other.row && boardCol === other.col)) {
-              if (!(midRow === other.row && midCol === other.col)) {
-                const fromR = player.row, fromC = player.col;
-                const pNum = gameState.currentPlayer;
-                showCardEffect('dash', () => {
-                  animateDash(fromR, fromC, boardRow, boardCol, pNum, () => {
-                    player.row = boardRow;
-                    player.col = boardCol;
-                    useCard();
-                    renderCats();
-                    checkWin();
-                    if (!gameState.gameOver) switchPlayer();
-                  });
-                });
-                return;
-              }
-            }
-          }
-        }
-      } else if (card === 'jump') {
-        const dr = boardRow - player.row;
-        const dc = boardCol - player.col;
-        
-        if ((Math.abs(dr) === 2 && dc === 0) || (dr === 0 && Math.abs(dc) === 2)) {
-          const midRow = player.row + dr / 2;
-          const midCol = player.col + dc / 2;
-          
-          if (midRow === other.row && midCol === other.col) {
-            if (!isWallBetween(player.row, player.col, midRow, midCol) &&
-                !isWallBetween(midRow, midCol, boardRow, boardCol)) {
-              if (boardRow >= 0 && boardRow < BOARD_SIZE && boardCol >= 0 && boardCol < BOARD_SIZE) {
-                const fromR = player.row, fromC = player.col;
-                const pNum = gameState.currentPlayer;
-                showCardEffect('jump', () => {
-                  animateJump(fromR, fromC, boardRow, boardCol, pNum, () => {
-                    player.row = boardRow;
-                    player.col = boardCol;
-                    useCard();
-                    renderCats();
-                    checkWin();
-                    if (!gameState.gameOver) switchPlayer();
-                  });
-                });
-                return;
-              }
-            }
-          }
-        }
-      } else if (card === 'push') {
-        const dr = boardRow - player.row;
-        const dc = boardCol - player.col;
-        
-        if ((Math.abs(dr) === 1 && dc === 0) || (dr === 0 && Math.abs(dc) === 1)) {
-          if (boardRow === other.row && boardCol === other.col) {
-            const pushRow = other.row + dr;
-            const pushCol = other.col + dc;
-            
-            if (pushRow >= 0 && pushRow < BOARD_SIZE && pushCol >= 0 && pushCol < BOARD_SIZE) {
-              if (!isWallBetween(player.row, player.col, boardRow, boardCol) &&
-                  !isWallBetween(other.row, other.col, pushRow, pushCol)) {
-                const pNum = gameState.currentPlayer;
-                const pushDir = [dr, dc];
-                showCardEffect('push', () => {
-                  animatePush(pNum, pushDir, () => {
-                    other.row = pushRow;
-                    other.col = pushCol;
-                    player.row = boardRow;
-                    player.col = boardCol;
-                    useCard();
-                    renderCats();
-                    checkWin();
-                    if (!gameState.gameOver) switchPlayer();
-                  });
+              // 斜め壁チェック: 縦→横 の経路で壁がないか
+              if (!isWallBetween(player.row, player.col, player.row + dr, player.col) &&
+                  !isWallBetween(player.row + dr, player.col, boardRow, boardCol)) {
+                saveHistory();
+                showCardEffect(cardId, () => {
+                  player.row = boardRow;
+                  player.col = boardCol;
+                  useCard();
+                  renderCats(pNum);
+                  checkWin();
+                  if (!gameState.gameOver) afterCardAction(cardId);
                 });
                 return;
               }
@@ -2782,24 +3137,272 @@ const BOARD_SIZE = 7;
           }
         }
       }
+
+      // === にんじゃねこ: ムササビの術（相手を飛び越える） ===
+      if (cardId === 'ninja_musasabi') {
+        const dr = boardRow - player.row;
+        const dc = boardCol - player.col;
+        if ((Math.abs(dr) === 2 && dc === 0) || (dr === 0 && Math.abs(dc) === 2)) {
+          const midRow = player.row + dr / 2;
+          const midCol = player.col + dc / 2;
+          if (midRow === other.row && midCol === other.col) {
+            if (!isWallBetween(player.row, player.col, midRow, midCol) &&
+                !isWallBetween(midRow, midCol, boardRow, boardCol)) {
+              saveHistory();
+              showCardEffect(cardId, () => {
+                player.row = boardRow;
+                player.col = boardCol;
+                useCard();
+                renderCats(pNum);
+                checkWin();
+                if (!gameState.gameOver) afterCardAction(cardId);
+              });
+              return;
+            }
+          }
+        }
+      }
+
+      // === どろぼうねこ: ずらかる（横2マス移動、壁無視） ===
+      if (cardId === 'thief_zurakaru') {
+        const dr = boardRow - player.row;
+        const dc = boardCol - player.col;
+        if (dr === 0 && Math.abs(dc) === 2) {
+          if (boardCol >= 0 && boardCol < BOARD_SIZE) {
+            if (!(boardRow === other.row && boardCol === other.col)) {
+              saveHistory();
+              showCardEffect(cardId, () => {
+                player.row = boardRow;
+                player.col = boardCol;
+                useCard();
+                renderCats(pNum);
+                checkWin();
+                if (!gameState.gameOver) afterCardAction(cardId);
+              });
+              return;
+            }
+          }
+        }
+      }
+
+      // === すもうねこ: 押し出し（隣の相手を1マス押す） ===
+      if (cardId === 'sumo_oshidashi') {
+        if (boardRow === other.row && boardCol === other.col) {
+          const dr = other.row - player.row;
+          const dc = other.col - player.col;
+          if ((Math.abs(dr) === 1 && dc === 0) || (dr === 0 && Math.abs(dc) === 1)) {
+            const pushRow = other.row + dr;
+            const pushCol = other.col + dc;
+            if (pushRow >= 0 && pushRow < BOARD_SIZE && pushCol >= 0 && pushCol < BOARD_SIZE) {
+              if (!isWallBetween(player.row, player.col, other.row, other.col) &&
+                  !isWallBetween(other.row, other.col, pushRow, pushCol)) {
+                saveHistory();
+                showCardEffect(cardId, () => {
+                  other.row = pushRow;
+                  other.col = pushCol;
+                  useCard();
+                  renderCats();
+                  checkWin();
+                  if (!gameState.gameOver) afterCardAction(cardId);
+                });
+                return;
+              }
+            }
+          }
+        }
+      }
+
+      // === すもうねこ: 上手投げ（隣の相手を反対側に2マス投げる） ===
+      if (cardId === 'sumo_uwatenage') {
+        if (boardRow === other.row && boardCol === other.col) {
+          const dr = other.row - player.row;
+          const dc = other.col - player.col;
+          if ((Math.abs(dr) === 1 && dc === 0) || (dr === 0 && Math.abs(dc) === 1)) {
+            // 反対側に2マス = player側に2マス
+            let throwRow = player.row - dr;
+            let throwCol = player.col - dc;
+            // 範囲外ならクリップ
+            throwRow = Math.max(0, Math.min(BOARD_SIZE - 1, throwRow));
+            throwCol = Math.max(0, Math.min(BOARD_SIZE - 1, throwCol));
+            // 投げ先にプレイヤーがいたら1マス手前に
+            if (throwRow === player.row && throwCol === player.col) {
+              throwRow = player.row - dr;
+              throwCol = player.col - dc;
+              if (throwRow < 0 || throwRow >= BOARD_SIZE || throwCol < 0 || throwCol >= BOARD_SIZE) return;
+            }
+            saveHistory();
+            showCardEffect(cardId, () => {
+              other.row = throwRow;
+              other.col = throwCol;
+              useCard();
+              renderCats();
+              checkWin();
+              if (!gameState.gameOver) afterCardAction(cardId);
+            });
+            return;
+          }
+        }
+      }
+
+      // === まじょねこ: テレポート（同じ行の好きなマスへ移動、壁無視、入れ替わり） ===
+      if (cardId === 'witch_teleport') {
+        if (boardRow === player.row && boardCol !== player.col) {
+          saveHistory();
+          showCardEffect(cardId, () => {
+            if (boardRow === other.row && boardCol === other.col) {
+              // 入れ替わり
+              other.row = player.row;
+              other.col = player.col;
+            }
+            player.row = boardRow;
+            player.col = boardCol;
+            useCard();
+            renderCats(pNum);
+            checkWin();
+            if (!gameState.gameOver) afterCardAction(cardId);
+          });
+          return;
+        }
+      }
+
+      // === ゆうれいねこ: ゴーストウォーク（壁を1枚すり抜けて隣に移動） ===
+      if (cardId === 'ghost_walk') {
+        const dr = boardRow - player.row;
+        const dc = boardCol - player.col;
+        if ((Math.abs(dr) === 1 && dc === 0) || (dr === 0 && Math.abs(dc) === 1)) {
+          if (boardRow >= 0 && boardRow < BOARD_SIZE && boardCol >= 0 && boardCol < BOARD_SIZE) {
+            if (!(boardRow === other.row && boardCol === other.col)) {
+              // 壁があってもなくても移動可能（ゴーストウォーク）
+              saveHistory();
+              showCardEffect(cardId, () => {
+                player.row = boardRow;
+                player.col = boardCol;
+                useCard();
+                renderCats(pNum);
+                checkWin();
+                if (!gameState.gameOver) afterCardAction(cardId);
+              });
+              return;
+            }
+          }
+        }
+      }
+
+      // === ゆうれいねこ: 憑依（相手を1マス自由に動かす） ===
+      // === はかせねこ: リモート操作（2マス以内の相手を1マス動かす） ===
+      if (cardId === 'ghost_hyoui' || cardId === 'prof_remote') {
+        // クリック先が相手の隣接マスか（相手を移動させる先）
+        const dr = boardRow - other.row;
+        const dc = boardCol - other.col;
+        if ((Math.abs(dr) === 1 && dc === 0) || (dr === 0 && Math.abs(dc) === 1)) {
+          if (boardRow >= 0 && boardRow < BOARD_SIZE && boardCol >= 0 && boardCol < BOARD_SIZE) {
+            if (!(boardRow === player.row && boardCol === player.col)) {
+              if (!isWallBetween(other.row, other.col, boardRow, boardCol)) {
+                saveHistory();
+                showCardEffect(cardId, () => {
+                  other.row = boardRow;
+                  other.col = boardCol;
+                  useCard();
+                  renderCats();
+                  checkWin();
+                  if (!gameState.gameOver) afterCardAction(cardId);
+                });
+                return;
+              }
+            }
+          }
+        }
+      }
+
+      // === でんきねこ: 電光石火（自由に2マス移動、壁は越えられない） ===
+      if (cardId === 'electric_raiden') {
+        // 2マス以内で壁なしパスが存在するか
+        const dist = Math.abs(boardRow - player.row) + Math.abs(boardCol - player.col);
+        if (dist >= 1 && dist <= 2 && !(boardRow === other.row && boardCol === other.col)) {
+          // パス検証: BFSで2歩以内に到達可能か
+          const canReach = canReachInSteps(player.row, player.col, boardRow, boardCol, 2, other);
+          if (canReach) {
+            saveHistory();
+            showCardEffect(cardId, () => {
+              player.row = boardRow;
+              player.col = boardCol;
+              useCard();
+              renderCats(pNum);
+              checkWin();
+              if (!gameState.gameOver) afterCardAction(cardId);
+            });
+            return;
+          }
+        }
+      }
+
+      // === でんきねこ: 超電導マグネット（2マス以内の相手を隣に引き寄せる） ===
+      if (cardId === 'electric_magnet') {
+        // ターゲットはプレイヤーの隣接マス
+        const dr = boardRow - player.row;
+        const dc = boardCol - player.col;
+        if ((Math.abs(dr) === 1 && dc === 0) || (dr === 0 && Math.abs(dc) === 1)) {
+          const distToOther = Math.abs(player.row - other.row) + Math.abs(player.col - other.col);
+          if (distToOther <= 2 && distToOther > 0) {
+            // 相手を引き寄せ先に移動（壁チェックは相手→引き寄せ先）
+            if (!isWallBetween(other.row, other.col, boardRow, boardCol) || distToOther === 1) {
+              saveHistory();
+              showCardEffect(cardId, () => {
+                other.row = boardRow;
+                other.col = boardCol;
+                useCard();
+                renderCats();
+                checkWin();
+                if (!gameState.gameOver) afterCardAction(cardId);
+              });
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    // 電光石火用: BFSで指定歩数以内に到達可能か
+    function canReachInSteps(fromRow, fromCol, toRow, toCol, maxSteps, other) {
+      const queue = [{ row: fromRow, col: fromCol, steps: 0 }];
+      const visited = new Set();
+      visited.add(`${fromRow},${fromCol}`);
+      while (queue.length > 0) {
+        const { row, col, steps } = queue.shift();
+        if (row === toRow && col === toCol) return true;
+        if (steps >= maxSteps) continue;
+        for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+          const nr = row + dr, nc = col + dc;
+          if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) continue;
+          if (visited.has(`${nr},${nc}`)) continue;
+          if (nr === other.row && nc === other.col) continue;
+          if (isWallBetween(row, col, nr, nc)) continue;
+          visited.add(`${nr},${nc}`);
+          queue.push({ row: nr, col: nc, steps: steps + 1 });
+        }
+      }
+      return false;
     }
 
     function handleCardWallClick(cornerRow, cornerCol) {
-      const card = gameState.selectedCard;
-      
+      const cardId = gameState.selectedCard;
+
       // 壁を特定
-      const wallIndex = gameState.walls.findIndex(w => 
+      const wallIndex = gameState.walls.findIndex(w =>
         w.cornerRow === cornerRow && w.cornerCol === cornerCol
       );
-      
+
       if (wallIndex === -1) return;
       const wall = gameState.walls[wallIndex];
 
-      if (card === 'slide') {
-        // スライド: 壁を選択したら方向選択モーダルを表示
+      // スライド系カード: sumo_teppou, construction_move
+      if (cardId === 'sumo_teppou' || cardId === 'construction_move' || cardId === 'slide') {
         gameState.slideTargetWall = wall;
+        gameState.slideCardId = cardId; // スライド完了時に使用
         openSlideModal();
-      } else if (card === 'rotate') {
+      }
+      // 回転系カード: construction_rotate, rotate
+      else if (cardId === 'construction_rotate' || cardId === 'rotate') {
         const newOrientation = wall.orientation === 'h' ? 'v' : 'h';
         const newWall = {
           cornerRow: wall.cornerRow,
@@ -2807,35 +3410,51 @@ const BOARD_SIZE = 7;
           orientation: newOrientation,
           owner: wall.owner
         };
-        
+
         gameState.walls.splice(wallIndex, 1);
-        
+
         if (canPlaceWall(newWall)) {
           const savedWall = {...wall};
-          showCardEffect('rotate', () => {
+          showCardEffect(cardId, () => {
             animateRotate(savedWall, () => {
               gameState.walls.push(newWall);
               useCard();
               renderWalls();
-              switchPlayer();
+              afterCardAction(cardId);
             });
           });
           return;
         }
-        
+
         gameState.walls.push(wall);
         showToast('回転できないよ！', 'warn');
-      } else if (card === 'recover') {
+      }
+      // 壁破壊系カード: construction_blast, walldestroy
+      else if (cardId === 'construction_blast' || cardId === 'walldestroy') {
+        const savedWall = {...wall};
+        showCardEffect(cardId, () => {
+          animateWallDestroy(savedWall, () => {
+            const idx = gameState.walls.findIndex(w =>
+              w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol
+            );
+            if (idx !== -1) gameState.walls.splice(idx, 1);
+            useCard();
+            renderWalls();
+            updateUI();
+            afterCardAction(cardId);
+          });
+        });
+      }
+      // 壁回収(旧): recover
+      else if (cardId === 'recover') {
         if (wall.owner !== gameState.currentPlayer) {
           showToast('自分がおいた壁しか回収できないよ！', 'warn');
           return;
         }
         const savedWall = {...wall};
-        const savedWallIndex = wallIndex;
-        showCardEffect('recover', () => {
+        showCardEffect(cardId, () => {
           animateRecover(savedWall, () => {
-            // wallIndexが変わっている可能性があるので再検索
-            const idx = gameState.walls.findIndex(w => 
+            const idx = gameState.walls.findIndex(w =>
               w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol
             );
             if (idx !== -1) gameState.walls.splice(idx, 1);
@@ -2957,13 +3576,14 @@ const BOARD_SIZE = 7;
       if (canPlaceWall(newWall)) {
         const savedOldWall = {...wall};
         const savedNewWall = {...newWall};
+        const slideCardId = gameState.slideCardId || 'slide';
         closeSlideModal();
-        showCardEffect('slide', () => {
+        showCardEffect(slideCardId, () => {
           animateSlide(savedOldWall, savedNewWall, () => {
             gameState.walls.push(newWall);
             useCard();
             renderWalls();
-            switchPlayer();
+            afterCardAction(slideCardId);
           });
         });
       } else {
@@ -3046,18 +3666,44 @@ const BOARD_SIZE = 7;
     }
 
     function switchPlayer() {
-      // 足止め状態をクリア（このターンを終えたプレイヤー）
-      gameState.players[gameState.currentPlayer].frozen = false;
-      
+      const prevPlayer = gameState.currentPlayer;
+
+      // 足止め状態の処理（frozenTurnsをデクリメント）
+      const pp = gameState.players[prevPlayer];
+      if (pp.frozenTurns > 0) {
+        pp.frozenTurns--;
+        if (pp.frozenTurns <= 0) {
+          pp.frozen = false;
+        }
+      }
+
+      // hidden状態をクリア（自分のターン終了時）
+      pp.hidden = false;
+
+      // Move OKフラグリセット
+      gameState.pendingMoveOk = false;
+
       gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
-      gameState.turn++; // ターン数を増やす
+      gameState.turn++;
       gameState.selectedCard = null;
       gameState.cardPhase = null;
       gameState.previewWall = null;
       setMode('move');
+
+      // 次のプレイヤーの封印カウントダウン
+      const nextPlayer = gameState.players[gameState.currentPlayer];
+      for (const cid of Object.keys(nextPlayer.sealedCards)) {
+        if (nextPlayer.sealedCards[cid] > 0) {
+          nextPlayer.sealedCards[cid]--;
+          if (nextPlayer.sealedCards[cid] <= 0) {
+            delete nextPlayer.sealedCards[cid];
+          }
+        }
+      }
+
       updateUI();
       highlightValidMoves();
-      
+
       // AIモードでくろねこのターンならAI行動
       if (gameMode === 'ai' && gameState.currentPlayer === 2 && !gameState.gameOver) {
         aiTurn();
@@ -3126,18 +3772,28 @@ const BOARD_SIZE = 7;
 
         const usedCount = player.cardsUsed[card.id] || 0;
         const canUseMore = usedCount < card.limit;
-        const canUse = canUseMore && canUseCard(card.id);
+        const isSealed = (player.sealedCards[card.id] || 0) > 0;
+        const canUse = canUseMore && !isSealed && canUseCard(card.id);
 
-        if (!canUse) {
+        // カウンターカードは自分のターンには使えない（受動発動のみ）
+        const isCounter = card.actionType === 'counter';
+        const finalCanUse = canUse && !isCounter;
+
+        if (!finalCanUse) {
           cardEl.classList.add('disabled');
-          if (canUseMore) cardEl.classList.add('available');
+          if (canUseMore && !isSealed && !isCounter) cardEl.classList.add('available');
         }
-        if (canUse) hasAvailableCard = true;
+        if (finalCanUse) hasAvailableCard = true;
 
+        const typeIcon = card.actionType === 'move_act' ? '🔵' : card.actionType === 'move_ok' ? '🟢' : card.actionType === 'turn_end' ? '🔴' : '🟣';
         const imgSrc = CARD_IMAGES[card.id];
         let statusText = '';
         if (!canUseMore) {
           statusText = '<div class="card-name" style="margin-top:4px;font-size:0.75em;color:#c0392b;">使用済み</div>';
+        } else if (isSealed) {
+          statusText = `<div class="card-name" style="margin-top:4px;font-size:0.7em;color:#9b59b6;">🤐 封印中（${player.sealedCards[card.id]}ターン）</div>`;
+        } else if (isCounter) {
+          statusText = '<div class="card-name" style="margin-top:4px;font-size:0.7em;color:#3498db;">🟣 カウンター（自動発動）</div>';
         } else if (!canUse) {
           statusText = '<div class="card-name" style="margin-top:4px;font-size:0.7em;color:#7f8c8d;">条件を みたしていない</div>';
         }
@@ -3150,13 +3806,13 @@ const BOARD_SIZE = 7;
         } else {
           cardEl.innerHTML = `
             <div class="card-icon">${card.icon}</div>
-            <div class="card-name">${card.name}</div>
+            <div class="card-name">${typeIcon} ${card.name}</div>
             <div class="card-desc">${card.desc}</div>
             ${statusText}
           `;
         }
 
-        if (canUse) {
+        if (finalCanUse) {
           cardEl.onclick = () => selectCard(card.id);
         }
 
@@ -3192,24 +3848,101 @@ const BOARD_SIZE = 7;
       const player = gameState.players[gameState.currentPlayer];
       const otherNum = gameState.currentPlayer === 1 ? 2 : 1;
       const other = gameState.players[otherNum];
+      const dist = Math.abs(player.row - other.row) + Math.abs(player.col - other.col);
 
       switch (cardId) {
-        case 'swap':
-          // 2マス以内（マンハッタン距離≤2）かつ3ターン目以降
-          const swapDist = Math.abs(player.row - other.row) + Math.abs(player.col - other.col);
-          return gameState.turn >= 3 && swapDist <= 2;
-        case 'slide':
-        case 'rotate':
-          return gameState.walls.length > 0;
-        case 'recover':
-          // 自分が置いた壁がある場合のみ使用可能
-          return gameState.walls.some(wall => wall.owner === gameState.currentPlayer);
-        case 'dash':
-          return hasDashTarget();
-        case 'jump':
+        // --- にんじゃねこ ---
+        case 'ninja_shinobi': {
+          // 斜め方向に移動可能なマスがあるか
+          const diags = [[-1,-1],[-1,1],[1,-1],[1,1]];
+          return diags.some(([dr,dc]) => {
+            const nr = player.row+dr, nc = player.col+dc;
+            if (nr<0||nr>=BOARD_SIZE||nc<0||nc>=BOARD_SIZE) return false;
+            if (nr===other.row && nc===other.col) return false;
+            // 斜め移動の壁判定: 縦横両方の壁がないこと
+            return !isWallBetween(player.row, player.col, player.row+dr, player.col) &&
+                   !isWallBetween(player.row+dr, player.col, nr, nc);
+          });
+        }
+        case 'ninja_musasabi':
           return isAdjacentToOther() && canJumpOver();
-        case 'push':
+        case 'ninja_kawarimi':
+          return true; // カウンター（常に持てる）
+
+        // --- どろぼうねこ ---
+        case 'thief_zurakaru': {
+          // 横方向に2マス移動可能か（壁は無視）
+          const col = player.col;
+          return (col + 2 < BOARD_SIZE && !(player.row === other.row && col+2 === other.col)) ||
+                 (col - 2 >= 0 && !(player.row === other.row && col-2 === other.col));
+        }
+        case 'thief_kakureru':
+          return true;
+        case 'thief_itadaki':
+          return other.walls > 0;
+
+        // --- すもうねこ ---
+        case 'sumo_oshidashi':
           return isAdjacentToOther() && canPushOther();
+        case 'sumo_uwatenage':
+          return isAdjacentToOther();
+        case 'sumo_teppou':
+          return gameState.walls.length > 0;
+
+        // --- まじょねこ ---
+        case 'witch_teleport':
+          return true; // 同じ行の他マスに移動可能
+        case 'witch_seal': {
+          // 相手に未使用・未封印のカードがあるか
+          const otherHand = playerHands[otherNum];
+          if (!otherHand) return false;
+          return otherHand.some(cid => {
+            const used = (other.cardsUsed[cid] || 0) >= 1;
+            const sealed = (other.sealedCards[cid] || 0) > 0;
+            return !used && !sealed;
+          });
+        }
+        case 'witch_shield':
+          return true; // カウンター
+
+        // --- ゆうれいねこ ---
+        case 'ghost_walk':
+          return true; // 壁がなくても移動先選択で判定
+        case 'ghost_kanashibari':
+          return true;
+        case 'ghost_hyoui':
+          return true; // 相手を操る
+
+        // --- でんきねこ ---
+        case 'electric_raiden':
+          return true; // 2マス自由移動
+        case 'electric_shock':
+          return isAdjacentToOther();
+        case 'electric_magnet':
+          return dist <= 2 && dist > 0;
+
+        // --- はかせねこ ---
+        case 'prof_wallmachine':
+          return true;
+        case 'prof_copy': {
+          const otherHandC = playerHands[otherNum];
+          if (!otherHandC) return false;
+          return otherHandC.some(cid => {
+            const c = CHARACTER_CARDS.find(cc => cc.id === cid);
+            return c && c.actionType !== 'counter' && !((other.cardsUsed[cid] || 0) >= 1);
+          });
+        }
+        case 'prof_remote':
+          return dist <= 2 && dist > 0;
+
+        // --- こうじねこ ---
+        case 'construction_move':
+          return gameState.walls.length > 0;
+        case 'construction_rotate':
+          return gameState.walls.length > 0;
+        case 'construction_blast':
+          return gameState.walls.length > 0;
+
         default:
           return true;
       }
@@ -3284,13 +4017,13 @@ const BOARD_SIZE = 7;
     function selectCard(cardId) {
       closeCardModal();
       gameState.selectedCard = cardId;
-      
+
       // ちゃとら用ボタン
       document.getElementById('btn-move').classList.remove('active');
       document.getElementById('btn-wall-h').classList.remove('active');
       document.getElementById('btn-wall-v').classList.remove('active');
       document.getElementById('btn-card').classList.add('active');
-      
+
       // くろねこ用ボタン
       document.getElementById('btn-move2').classList.remove('active');
       document.getElementById('btn-wall-h2').classList.remove('active');
@@ -3301,17 +4034,21 @@ const BOARD_SIZE = 7;
       document.getElementById('mode-indicator').textContent = `カード: ${card.icon} ${card.name}`;
       document.getElementById('mode-indicator2').textContent = `カード: ${card.icon} ${card.name}`;
 
-      // 即時実行カード
-      if (cardId === 'swap') {
-        executeSwap();
+      // 即時実行カード（ターゲット不要）
+      const immediateCards = [
+        'thief_kakureru', 'thief_itadaki',
+        'ghost_kanashibari',
+        'electric_shock',
+        'prof_wallmachine', 'prof_copy'
+      ];
+      if (immediateCards.includes(cardId)) {
+        executeImmediateCard(cardId);
         return;
       }
-      if (cardId === 'freeze') {
-        executeFreeze();
-        return;
-      }
-      if (cardId === 'wallplus') {
-        executeWallPlus();
+
+      // 封印カード → 相手カード選択モーダル
+      if (cardId === 'witch_seal') {
+        showSealModal();
         return;
       }
 
@@ -3319,10 +4056,153 @@ const BOARD_SIZE = 7;
       highlightCardTargets(cardId);
     }
 
+    // カード使用後のアクションタイプに応じた処理
+    function afterCardAction(cardId) {
+      const card = CHARACTER_CARDS.find(c => c.id === cardId);
+      if (!card) { switchPlayer(); return; }
+
+      // コピーカード使用時はコピー元のactionTypeに従う（ただしprof_copy自体のturn_endは無視）
+      const effectiveActionType = gameState.copyingCard ? (card.actionType || 'turn_end') : card.actionType;
+
+      if (effectiveActionType === 'move_ok') {
+        // 🟢 Move OK: 使用後に1マス移動可能
+        gameState.pendingMoveOk = true;
+        gameState.selectedCard = null;
+        gameState.cardPhase = null;
+        setMode('move');
+        highlightValidMoves();
+
+        // AI時は自動で最善移動
+        if (gameMode === 'ai' && gameState.currentPlayer === 2) {
+          const moves = getValidMoves(2);
+          if (moves.length > 0) {
+            const ai = gameState.players[2];
+            let best = moves[0], bestDist = Infinity;
+            for (const m of moves) {
+              const p = findShortestPath(m.row, m.col, 0);
+              const d = p ? p.length : 999;
+              if (d < bestDist) { bestDist = d; best = m; }
+            }
+            ai.row = best.row;
+            ai.col = best.col;
+            renderCats(2);
+            checkWin();
+          }
+          gameState.pendingMoveOk = false;
+          if (!gameState.gameOver) switchPlayer();
+        } else {
+          showToast('🟢 カード使用後、1マス移動できるよ！', 'info', 2000);
+        }
+      } else {
+        // 🔴 Turn End / 🔵 Move Act: ターン終了
+        if (!gameState.gameOver) switchPlayer();
+      }
+    }
+
+    // 即時実行カード（ターゲット選択不要）
+    function executeImmediateCard(cardId) {
+      const player = gameState.players[gameState.currentPlayer];
+      const otherNum = gameState.currentPlayer === 1 ? 2 : 1;
+      const other = gameState.players[otherNum];
+
+      switch (cardId) {
+        case 'thief_kakureru':
+          showCardEffect(cardId, () => {
+            player.hidden = true;
+            useCard();
+            showToast('🃏 次のターン、カード効果を受けないよ！', 'info');
+            afterCardAction(cardId);
+          });
+          break;
+        case 'thief_itadaki':
+          showCardEffect(cardId, () => {
+            if (other.walls > 0) {
+              other.walls--;
+              player.walls++;
+              showToast('🧱 壁を1枚いただいた！', 'info');
+            }
+            useCard();
+            updateUI();
+            afterCardAction(cardId);
+          });
+          break;
+        case 'ghost_kanashibari':
+          showCardEffect(cardId, () => {
+            other.frozen = true;
+            other.frozenTurns = 1;
+            useCard();
+            showToast('🥶 金縛り！相手は次のターン移動できない！', 'info');
+            afterCardAction(cardId);
+          });
+          break;
+        case 'electric_shock':
+          showCardEffect(cardId, () => {
+            other.frozen = true;
+            other.frozenTurns = 2;
+            useCard();
+            showToast('⚡ 感電！相手は2ターン移動できない！', 'info');
+            afterCardAction(cardId);
+          });
+          break;
+        case 'prof_wallmachine':
+          showCardEffect(cardId, () => {
+            player.walls += 2;
+            useCard();
+            updateUI();
+            showToast('🧪 壁が2枚増えた！', 'info');
+            afterCardAction(cardId);
+          });
+          break;
+        case 'prof_copy':
+          executeCopy();
+          break;
+      }
+    }
+
+    // 封印カード: 相手のカード選択モーダル
+    function showSealModal() {
+      const otherNum = gameState.currentPlayer === 1 ? 2 : 1;
+      const other = gameState.players[otherNum];
+      const otherHand = playerHands[otherNum];
+      if (!otherHand) return;
+
+      const sealableCards = CHARACTER_CARDS.filter(c =>
+        otherHand.includes(c.id) && !((other.cardsUsed[c.id] || 0) >= 1) && !((other.sealedCards[c.id] || 0) > 0)
+      );
+
+      const grid = document.getElementById('copy-grid');
+      grid.innerHTML = '';
+
+      sealableCards.forEach(card => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'skill-card';
+        cardEl.innerHTML = `
+          <div class="card-icon">${card.icon}</div>
+          <div class="card-name">${card.name}</div>
+          <div class="card-desc">${card.desc}</div>
+        `;
+        cardEl.onclick = () => {
+          closeCopyModal();
+          showCardEffect('witch_seal', () => {
+            other.sealedCards[card.id] = 2;
+            useCard();
+            showToast(`🤐 ${card.name} を2ターン封印した！`, 'info');
+            afterCardAction('witch_seal');
+          });
+        };
+        grid.appendChild(cardEl);
+      });
+
+      const copyModal = document.getElementById('copy-modal');
+      document.querySelector('#copy-modal .card-modal h2').textContent = '🤐 封印するカードをえらぶ';
+      copyModal.classList.toggle('rotated-for-p1', gameState.currentPlayer === 1 && gameMode !== 'ai');
+      copyModal.classList.add('show');
+    }
+
     function executeSwap() {
       const p1 = gameState.players[1];
       const p2 = gameState.players[2];
-      
+
       showCardEffect('swap', () => {
         animateSwap(() => {
           [p1.row, p2.row] = [p2.row, p1.row];
@@ -3349,7 +4229,7 @@ const BOARD_SIZE = 7;
 
     function executeWallPlus() {
       const currentP = gameState.currentPlayer;
-      
+
       showCardEffect('wallplus', () => {
         animateWallPlus(currentP, () => {
           gameState.players[currentP].walls += 2;
@@ -3359,12 +4239,116 @@ const BOARD_SIZE = 7;
       });
     }
 
+    function executeCopy() {
+      const otherNum = gameState.currentPlayer === 1 ? 2 : 1;
+      const other = gameState.players[otherNum];
+      const otherHand = playerHands[otherNum];
+
+      // 相手の未使用カードを取得（コピー系・カウンター系はコピー不可）
+      let opponentCards;
+      if (otherHand) {
+        opponentCards = CHARACTER_CARDS.filter(c =>
+          c.actionType !== 'counter' && c.id !== 'prof_copy' && otherHand.includes(c.id) && !((other.cardsUsed[c.id] || 0) >= c.limit)
+        );
+      } else {
+        opponentCards = CHARACTER_CARDS.filter(c =>
+          c.actionType !== 'counter' && c.id !== 'prof_copy' && !((other.cardsUsed[c.id] || 0) >= c.limit)
+        );
+      }
+
+      if (opponentCards.length === 0) {
+        showToast('コピーできるカードがないよ！', 'warn');
+        return;
+      }
+
+      document.querySelector('#copy-modal .card-modal h2').textContent = '📠 相手のカードをコピー！';
+      showCopyModal(opponentCards);
+    }
+
+    function showCopyModal(cards) {
+      const grid = document.getElementById('copy-grid');
+      grid.innerHTML = '';
+
+      cards.forEach(card => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'skill-card';
+        const canUse = canUseCard(card.id);
+        if (!canUse) cardEl.classList.add('disabled');
+
+        const imgSrc = CARD_IMAGES[card.id];
+        if (imgSrc) {
+          cardEl.innerHTML = `
+            <img src="${imgSrc}" class="card-image" alt="${card.name}" style="width:100%;height:auto;border-radius:10px;display:block;">
+          `;
+        } else {
+          cardEl.innerHTML = `
+            <div class="card-icon">${card.icon}</div>
+            <div class="card-name">${card.name}</div>
+            <div class="card-desc">${card.desc}</div>
+          `;
+        }
+
+        if (canUse) {
+          cardEl.onclick = () => executeCopiedCard(card.id);
+        }
+
+        grid.appendChild(cardEl);
+      });
+
+      const copyModal = document.getElementById('copy-modal');
+      copyModal.classList.toggle('rotated-for-p1', gameState.currentPlayer === 1 && gameMode !== 'ai');
+      copyModal.classList.add('show');
+    }
+
+    function closeCopyModal() {
+      const copyModal = document.getElementById('copy-modal');
+      copyModal.classList.remove('show', 'rotated-for-p1');
+    }
+
+    function executeCopiedCard(cardId) {
+      closeCopyModal();
+      gameState.copyingCard = true;
+      gameState.selectedCard = cardId;
+
+      const card = SKILL_CARDS.find(c => c.id === cardId);
+      document.getElementById('mode-indicator').textContent = `複製: ${card.icon} ${card.name}`;
+      document.getElementById('mode-indicator2').textContent = `複製: ${card.icon} ${card.name}`;
+
+      // 即時実行カード
+      const immediateCards = [
+        'thief_kakureru', 'thief_itadaki',
+        'ghost_kanashibari',
+        'electric_shock',
+        'prof_wallmachine'
+      ];
+      if (immediateCards.includes(cardId)) {
+        executeImmediateCard(cardId);
+        return;
+      }
+
+      // 封印カード
+      if (cardId === 'witch_seal') {
+        showSealModal();
+        return;
+      }
+
+      // ターゲット選択カード
+      gameState.cardPhase = 'selectTarget';
+      highlightCardTargets(cardId);
+    }
+
     function useCard(skipEffect) {
       const player = gameState.players[gameState.currentPlayer];
-      const cardId = gameState.selectedCard;
-      
+      let cardId = gameState.selectedCard;
+
+      // 複製カードの場合、'prof_copy'(or旧'copy')を消費する
+      if (gameState.copyingCard) {
+        cardId = playerHands[gameState.currentPlayer]?.includes('prof_copy') ? 'prof_copy' : 'copy';
+        gameState.copyingCard = false;
+      }
+
       animating = false; // アニメーションロック解除
-      
+
       player.cardsUsed[cardId] = (player.cardsUsed[cardId] || 0) + 1;
       player.totalCardsUsed++;
       gameState.selectedCard = null;
@@ -3388,9 +4372,12 @@ const BOARD_SIZE = 7;
       if (imgSrc) {
         imgEl.src = imgSrc;
         imgEl.alt = card.name;
+        imgEl.style.display = '';
+      } else {
+        imgEl.style.display = 'none';
       }
-      
-      activateEl.textContent = `⚡ ${card.name} 発動！`;
+
+      activateEl.textContent = `${card.icon} ${card.name} 発動！`;
       
       cardEl.querySelectorAll('.card-spark').forEach(el => el.remove());
       
@@ -3751,6 +4738,41 @@ const BOARD_SIZE = 7;
       setTimeout(onComplete, 500);
     }
     
+    // 💥 壁破壊: 壁が砕け散るエフェクト
+    function animateWallDestroy(wall, onComplete) {
+      const cells = getWallCells(wall);
+      if (cells.length === 0) { onComplete(); return; }
+
+      cells.forEach(({row, col}, i) => {
+        const cellEl = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+        if (!cellEl) return;
+        const rect = cellEl.getBoundingClientRect();
+
+        const emojis = ['💥', '💫', '🔥'];
+        emojis.forEach((emoji, j) => {
+          const particle = document.createElement('div');
+          particle.textContent = emoji;
+          const angle = ((i * emojis.length + j) / (cells.length * emojis.length)) * Math.PI * 2;
+          const dist = 30 + Math.random() * 40;
+          particle.style.cssText = `
+            position: fixed; z-index: 400; pointer-events: none;
+            left: ${rect.left + rect.width/2 - 10}px; top: ${rect.top + rect.height/2 - 10}px;
+            font-size: 1.2rem; opacity: 1;
+            transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
+          `;
+          document.body.appendChild(particle);
+
+          setTimeout(() => {
+            particle.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(0)`;
+            particle.style.opacity = '0';
+          }, 50);
+          setTimeout(() => particle.remove(), 600);
+        });
+      });
+
+      setTimeout(onComplete, 500);
+    }
+
     // 🐾 足止め: 相手に鎖エフェクト
     function animateFreeze(targetNum, onComplete) {
       const target = gameState.players[targetNum];
@@ -3820,46 +4842,108 @@ const BOARD_SIZE = 7;
       const player = gameState.players[gameState.currentPlayer];
       const other = gameState.players[gameState.currentPlayer === 1 ? 2 : 1];
 
-      if (cardId === 'dash') {
-        const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-        for (const [dr, dc] of directions) {
-          const midRow = player.row + dr;
-          const midCol = player.col + dc;
-          const targetRow = player.row + dr * 2;
-          const targetCol = player.col + dc * 2;
-
-          if (targetRow >= 0 && targetRow < BOARD_SIZE && targetCol >= 0 && targetCol < BOARD_SIZE) {
-            if (!isWallBetween(player.row, player.col, midRow, midCol) &&
-                !isWallBetween(midRow, midCol, targetRow, targetCol)) {
-              if (!(midRow === other.row && midCol === other.col) &&
-                  !(targetRow === other.row && targetCol === other.col)) {
-                highlightFloor(targetRow, targetCol, 'highlight-special');
-              }
+      // === 忍び足: 斜め1マス ===
+      if (cardId === 'ninja_shinobi') {
+        for (const [dr, dc] of [[-1,-1],[-1,1],[1,-1],[1,1]]) {
+          const nr = player.row+dr, nc = player.col+dc;
+          if (nr<0||nr>=BOARD_SIZE||nc<0||nc>=BOARD_SIZE) continue;
+          if (nr===other.row && nc===other.col) continue;
+          if (!isWallBetween(player.row, player.col, player.row+dr, player.col) &&
+              !isWallBetween(player.row+dr, player.col, nr, nc)) {
+            highlightFloor(nr, nc, 'highlight-special');
+          }
+        }
+      }
+      // === ムササビの術: 相手を飛び越え ===
+      else if (cardId === 'ninja_musasabi') {
+        const dr = other.row - player.row;
+        const dc = other.col - player.col;
+        if ((Math.abs(dr)+Math.abs(dc)) === 1) {
+          const landRow = other.row + dr;
+          const landCol = other.col + dc;
+          if (landRow>=0 && landRow<BOARD_SIZE && landCol>=0 && landCol<BOARD_SIZE) {
+            if (!isWallBetween(player.row, player.col, other.row, other.col) &&
+                !isWallBetween(other.row, other.col, landRow, landCol)) {
+              highlightFloor(landRow, landCol, 'highlight-special');
             }
           }
         }
-      } else if (cardId === 'jump') {
-        const dr = other.row - player.row;
-        const dc = other.col - player.col;
-        const landRow = other.row + dr;
-        const landCol = other.col + dc;
-
-        if (landRow >= 0 && landRow < BOARD_SIZE && landCol >= 0 && landCol < BOARD_SIZE) {
-          if (!isWallBetween(player.row, player.col, other.row, other.col) &&
-              !isWallBetween(other.row, other.col, landRow, landCol)) {
-            highlightFloor(landRow, landCol, 'highlight-special');
+      }
+      // === ずらかる: 横2マス ===
+      else if (cardId === 'thief_zurakaru') {
+        for (const dc of [-2, 2]) {
+          const nc = player.col + dc;
+          if (nc >= 0 && nc < BOARD_SIZE && !(player.row === other.row && nc === other.col)) {
+            highlightFloor(player.row, nc, 'highlight-special');
           }
         }
-      } else if (cardId === 'push') {
-        highlightFloor(other.row, other.col, 'highlight-special');
-      } else if (cardId === 'slide' || cardId === 'rotate') {
-        // 壁のコーナーをハイライト（全ての壁）
+      }
+      // === 押し出し: 相手をハイライト ===
+      else if (cardId === 'sumo_oshidashi') {
+        if (isAdjacentToOther()) highlightFloor(other.row, other.col, 'highlight-special');
+      }
+      // === 上手投げ: 相手をハイライト ===
+      else if (cardId === 'sumo_uwatenage') {
+        if (isAdjacentToOther()) highlightFloor(other.row, other.col, 'highlight-special');
+      }
+      // === テレポート: 同じ行の全マス ===
+      else if (cardId === 'witch_teleport') {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          if (c !== player.col) highlightFloor(player.row, c, 'highlight-special');
+        }
+      }
+      // === ゴーストウォーク: 隣接4方向 ===
+      else if (cardId === 'ghost_walk') {
+        for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+          const nr = player.row+dr, nc = player.col+dc;
+          if (nr>=0 && nr<BOARD_SIZE && nc>=0 && nc<BOARD_SIZE && !(nr===other.row && nc===other.col)) {
+            highlightFloor(nr, nc, 'highlight-special');
+          }
+        }
+      }
+      // === 憑依/リモート操作: 相手の隣接マスをハイライト ===
+      else if (cardId === 'ghost_hyoui' || cardId === 'prof_remote') {
+        for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+          const nr = other.row+dr, nc = other.col+dc;
+          if (nr>=0 && nr<BOARD_SIZE && nc>=0 && nc<BOARD_SIZE &&
+              !(nr===player.row && nc===player.col) &&
+              !isWallBetween(other.row, other.col, nr, nc)) {
+            highlightFloor(nr, nc, 'highlight-special');
+          }
+        }
+      }
+      // === 電光石火: 2歩以内の到達可能マス ===
+      else if (cardId === 'electric_raiden') {
+        for (let r = 0; r < BOARD_SIZE; r++) {
+          for (let c = 0; c < BOARD_SIZE; c++) {
+            if (r === player.row && c === player.col) continue;
+            if (r === other.row && c === other.col) continue;
+            const dist = Math.abs(r - player.row) + Math.abs(c - player.col);
+            if (dist <= 2 && canReachInSteps(player.row, player.col, r, c, 2, other)) {
+              highlightFloor(r, c, 'highlight-special');
+            }
+          }
+        }
+      }
+      // === 超電導マグネット: 自分の隣接マスをハイライト ===
+      else if (cardId === 'electric_magnet') {
+        for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+          const nr = player.row+dr, nc = player.col+dc;
+          if (nr>=0 && nr<BOARD_SIZE && nc>=0 && nc<BOARD_SIZE && !(nr===other.row && nc===other.col)) {
+            highlightFloor(nr, nc, 'highlight-special');
+          }
+        }
+      }
+      // === 壁操作カード: 全壁をハイライト ===
+      else if (['sumo_teppou', 'construction_move', 'construction_rotate', 'construction_blast',
+                'slide', 'rotate', 'walldestroy'].includes(cardId)) {
         gameState.walls.forEach(wall => {
           const cell = document.querySelector(`.cell[data-row="${wall.cornerRow}"][data-col="${wall.cornerCol}"]`);
           if (cell) cell.classList.add('highlight-wall');
         });
-      } else if (cardId === 'recover') {
-        // 自分が置いた壁のみハイライト
+      }
+      // === 壁回収(旧) ===
+      else if (cardId === 'recover') {
         gameState.walls.forEach(wall => {
           if (wall.owner === gameState.currentPlayer) {
             const cell = document.querySelector(`.cell[data-row="${wall.cornerRow}"][data-col="${wall.cornerCol}"]`);
@@ -3989,8 +5073,10 @@ const BOARD_SIZE = 7;
           }).join(' ') + '</div>';
       };
 
+      const frozenLabel = (p) => p.frozen ? ` <span class="frozen-badge">❄️ 足止め${p.frozenTurns > 1 ? `(${p.frozenTurns})` : ''}</span>` : '';
+      const hiddenLabel = (p) => p.hidden ? ' <span class="frozen-badge" style="background:#2ecc71;">🃏 隠れ</span>' : '';
       card1.innerHTML = `🎴 カード: ${remaining1}枚` +
-        (gameState.players[1].frozen ? ' <span class="frozen-badge">❄️ 足止め</span>' : '') +
+        frozenLabel(gameState.players[1]) + hiddenLabel(gameState.players[1]) +
         handLabel(1) +
         '<div class="card-usage-bar">' +
         Array.from({length: max1}, (_, i) =>
@@ -3999,7 +5085,7 @@ const BOARD_SIZE = 7;
       card1.classList.toggle('used', remaining1 === 0);
 
       card2.innerHTML = `🎴 カード: ${remaining2}枚` +
-        (gameState.players[2].frozen ? ' <span class="frozen-badge">❄️ 足止め</span>' : '') +
+        frozenLabel(gameState.players[2]) + hiddenLabel(gameState.players[2]) +
         handLabel(2) +
         '<div class="card-usage-bar">' +
         Array.from({length: max2}, (_, i) =>
@@ -4012,12 +5098,17 @@ const BOARD_SIZE = 7;
       const turnEl2 = document.getElementById('turn-indicator2');
       const turnCount = `<span class="turn-count">ターン ${gameState.turn}</span>`;
 
+      const c1 = CHARACTERS.find(c => c.id === playerCharacters[1]);
+      const c2 = CHARACTERS.find(c => c.id === playerCharacters[2]);
+      const e1 = c1 ? c1.emoji : '🐈';
+      const e2 = c2 ? c2.emoji : '🐈‍⬛';
+
       if (gameState.currentPlayer === 1) {
-        turnEl1.innerHTML = '🐈 きみのターン！' + turnCount;
-        turnEl2.innerHTML = '🐈 あいてのターン...' + turnCount;
+        turnEl1.innerHTML = `${e1} きみのターン！` + turnCount;
+        turnEl2.innerHTML = `${e1} あいてのターン...` + turnCount;
       } else {
-        turnEl1.innerHTML = '🐈‍⬛ あいてのターン...' + turnCount;
-        turnEl2.innerHTML = '🐈‍⬛ きみのターン！' + turnCount;
+        turnEl1.innerHTML = `${e2} あいてのターン...` + turnCount;
+        turnEl2.innerHTML = `${e2} きみのターン！` + turnCount;
       }
       // ターン切り替えアニメーション
       const activeTurnEl = gameState.currentPlayer === 1 ? turnEl1 : turnEl2;
@@ -4052,13 +5143,17 @@ const BOARD_SIZE = 7;
     }
 
     function resetGame() {
+      // キャラの絵文字を設定
+      const char1 = CHARACTERS.find(c => c.id === playerCharacters[1]);
+      const char2 = CHARACTERS.find(c => c.id === playerCharacters[2]);
+
       gameState = {
         currentPlayer: 1,
         mode: 'move',
         turn: 1,
         players: {
-          1: { row: 0, col: 3, walls: 6, emoji: '🐈', color: '#ffffff', cardsUsed: {}, totalCardsUsed: 0, frozen: false },
-          2: { row: 6, col: 3, walls: 6, emoji: '🐈‍⬛', color: '#333333', cardsUsed: {}, totalCardsUsed: 0, frozen: false }
+          1: { row: 0, col: 3, walls: 6, emoji: char1 ? char1.emoji : '🐈', color: '#ffffff', cardsUsed: {}, totalCardsUsed: 0, frozen: false, frozenTurns: 0, hidden: false, sealedCards: {} },
+          2: { row: 6, col: 3, walls: 6, emoji: char2 ? char2.emoji : '🐈‍⬛', color: '#333333', cardsUsed: {}, totalCardsUsed: 0, frozen: false, frozenTurns: 0, hidden: false, sealedCards: {} }
         },
         walls: [],
         gameOver: false,
@@ -4066,7 +5161,10 @@ const BOARD_SIZE = 7;
         cardPhase: null,
         wallOrientation: 'h',
         previewWall: null,
-        slideTargetWall: null
+        slideTargetWall: null,
+        slideCardId: null,
+        copyingCard: false,
+        pendingMoveOk: false
       };
 
       // 履歴をクリア
@@ -4075,6 +5173,7 @@ const BOARD_SIZE = 7;
       document.getElementById('winner-overlay').classList.remove('show');
       document.getElementById('card-modal').classList.remove('show');
       document.getElementById('slide-modal').classList.remove('show');
+      document.getElementById('copy-modal').classList.remove('show');
       setMode('move');
       initBoard();
       highlightValidMoves();
