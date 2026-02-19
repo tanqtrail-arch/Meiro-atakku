@@ -192,7 +192,7 @@ const BOARD_SIZE = 7;
     let collectedCards = [];        // ステージ間で持ち越すスペシャルカードID
     let stageCleared = [false, false, false, false, false, false]; // クリア状態
     let bossState = null;           // ボス固有の状態
-    // bossState = { type, trapCell, wallShiftCooldown, doubleWallCooldown, bossCardUsed, desperationUsed, wallBanTurns }
+    // bossState = { type, trapCell, wallShiftCooldown, doubleWallCooldown, bossCardUsed, desperationUsed, wallBanTurns, anchoredWalls }
 
     // AI学習データ（事前学習済み - 1000戦でAIが889勝）
     // AIはプレイヤー（ちゃとら）が下の白マスに行くのを妨害する壁を学習
@@ -4133,7 +4133,7 @@ const BOARD_SIZE = 7;
         showCardEffect(cardId, () => {
           animateWallDestroy(savedWall, () => {
             const idx = gameState.walls.findIndex(w =>
-              w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol
+              w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol && w.orientation === savedWall.orientation
             );
             if (idx !== -1) gameState.walls.splice(idx, 1);
             useCard();
@@ -4155,7 +4155,7 @@ const BOARD_SIZE = 7;
         const savedWall = {...wall};
         showCardEffect(cardId, () => {
           const idx = gameState.walls.findIndex(w =>
-            w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol
+            w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol && w.orientation === savedWall.orientation
           );
           if (idx !== -1) gameState.walls.splice(idx, 1);
           useCard();
@@ -4172,7 +4172,14 @@ const BOARD_SIZE = 7;
           return;
         }
         showCardEffect(cardId, () => {
-          if (!bossState) bossState = { anchoredWalls: [] };
+          // bossStateがない場合は安全に初期化（ステージモード以外でも使えるように）
+          if (!bossState) {
+            bossState = {
+              type: null, trapCell: null, wallShiftCooldown: 0,
+              doubleWallCooldown: 0, bossCardUsed: true,
+              desperationUsed: true, wallBanTurns: 0, anchoredWalls: []
+            };
+          }
           if (!bossState.anchoredWalls) bossState.anchoredWalls = [];
           bossState.anchoredWalls.push({
             cornerRow: wall.cornerRow,
@@ -4195,7 +4202,7 @@ const BOARD_SIZE = 7;
         showCardEffect(cardId, () => {
           animateRecover(savedWall, () => {
             const idx = gameState.walls.findIndex(w =>
-              w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol
+              w.cornerRow === savedWall.cornerRow && w.cornerCol === savedWall.cornerCol && w.orientation === savedWall.orientation
             );
             if (idx !== -1) gameState.walls.splice(idx, 1);
             gameState.players[gameState.currentPlayer].walls++;
