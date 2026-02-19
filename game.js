@@ -2574,7 +2574,12 @@ const BOARD_SIZE = 7;
             cell.classList.add('floor');
             const boardRow = row / 2;
             const boardCol = col / 2;
-            
+
+            // 市松模様
+            if ((boardRow + boardCol) % 2 === 1) {
+              cell.classList.add('tile-dark');
+            }
+
             if (boardRow === 0) {
               cell.classList.add('goal2');
             } else if (boardRow === BOARD_SIZE - 1) {
@@ -2707,6 +2712,7 @@ const BOARD_SIZE = 7;
     let lastCatPositions = { 1: null, 2: null };
 
     function renderCats(movedPlayer) {
+      document.querySelectorAll('.cat-wrapper').forEach(el => el.remove());
       document.querySelectorAll('.cat').forEach(el => el.remove());
 
       for (let p = 1; p <= 2; p++) {
@@ -2716,6 +2722,13 @@ const BOARD_SIZE = 7;
         const cell = document.querySelector(`.cell[data-row="${gridRow}"][data-col="${gridCol}"]`);
 
         if (cell) {
+          // ラッパー（猫 + 台座）
+          const wrapper = document.createElement('div');
+          wrapper.className = 'cat-wrapper';
+          if (p === gameState.currentPlayer) {
+            wrapper.classList.add('active-player');
+          }
+
           const cat = document.createElement('span');
           cat.className = 'cat ' + (p === 1 ? 'cat-down' : 'cat-up');
           cat.textContent = player.emoji;
@@ -2730,7 +2743,14 @@ const BOARD_SIZE = 7;
             cat.classList.add('moving');
             setTimeout(() => cat.classList.remove('moving'), 350);
           }
-          cell.appendChild(cat);
+
+          // 台座
+          const pedestal = document.createElement('div');
+          pedestal.className = `cat-pedestal pedestal-player${p}`;
+
+          wrapper.appendChild(cat);
+          wrapper.appendChild(pedestal);
+          cell.appendChild(wrapper);
         }
         lastCatPositions[p] = { row: player.row, col: player.col };
       }
