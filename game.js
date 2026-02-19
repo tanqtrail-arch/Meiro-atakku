@@ -3685,6 +3685,19 @@ const BOARD_SIZE = 7;
       showModeSelect();
     }
 
+    function goHome() {
+      if (!gameState.gameOver && gameState.turn > 1) {
+        if (!confirm('ゲームをやめてタイトルにもどりますか？')) return;
+      }
+      // モーダルやオーバーレイを全て閉じる
+      document.getElementById('card-modal').classList.remove('show');
+      document.getElementById('slide-modal').classList.remove('show');
+      document.getElementById('winner-overlay').classList.remove('show');
+      document.getElementById('ai-thinking').classList.add('hidden');
+      document.getElementById('game-container').classList.remove('ai-mode');
+      showModeSelect();
+    }
+
     function switchPlayer() {
       const prevPlayer = gameState.currentPlayer;
 
