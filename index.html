@@ -1781,6 +1781,44 @@
       display: none;
     }
 
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 400px;
+      position: relative;
+      margin-bottom: 2px;
+    }
+
+    .game-header h1 {
+      margin-bottom: 0;
+    }
+
+    .btn-home {
+      position: absolute;
+      left: 4px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid #d4a76a;
+      background: linear-gradient(145deg, #fff9f0 0%, #fce4b8 100%);
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      transition: all 0.2s ease;
+      touch-action: manipulation;
+    }
+
+    .btn-home:active {
+      transform: scale(0.9);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
     /* AIモード時はくろねこ側を自動操作風に */
     .game-container.ai-mode .player2-controls {
       opacity: 0.7;
@@ -2129,7 +2167,10 @@
 
   <!-- ゲーム画面 -->
   <div class="game-container hidden" id="game-container">
-    <h1>迷路アタック 🐱✨</h1>
+    <div class="game-header">
+      <button class="btn-home" onclick="goHome()">🏠</button>
+      <h1>迷路アタック 🐱✨</h1>
+    </div>
 
   <!-- ちゃとら用コントロール（上側）- 下方向に進む -->
   <div class="player-controls player1-controls" id="player1-controls">
