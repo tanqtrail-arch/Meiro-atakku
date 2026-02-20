@@ -115,9 +115,9 @@ const BOARD_SIZE = 7;
         aiDifficulty: 'medium', bossType: 'trickster',
         playerWalls: 6, aiWalls: 7,
         initialWalls: [
-          // ボスの城壁
-          { cornerRow: 3, cornerCol: 5, orientation: 'h', owner: 2 },
-          { cornerRow: 3, cornerCol: 7, orientation: 'v', owner: 2 }
+          // ボスの城壁（壊せない）
+          { cornerRow: 3, cornerCol: 5, orientation: 'h', owner: 2, castle: true },
+          { cornerRow: 3, cornerCol: 7, orientation: 'v', owner: 2, castle: true }
         ],
         specialCard: { id: 'stage_rotate', row: 5, col: 5 }
       },
@@ -133,10 +133,10 @@ const BOARD_SIZE = 7;
         aiDifficulty: 'hard', bossType: 'queen',
         playerWalls: 6, aiWalls: 7,
         initialWalls: [
-          // 女王の城壁：ゴール前に防衛ライン
-          { cornerRow: 1, cornerCol: 3, orientation: 'h', owner: 2 },
-          { cornerRow: 1, cornerCol: 7, orientation: 'h', owner: 2 },
-          { cornerRow: 3, cornerCol: 5, orientation: 'v', owner: 2 }
+          // 女王の城壁（壊せない）
+          { cornerRow: 1, cornerCol: 3, orientation: 'h', owner: 2, castle: true },
+          { cornerRow: 1, cornerCol: 7, orientation: 'h', owner: 2, castle: true },
+          { cornerRow: 3, cornerCol: 5, orientation: 'v', owner: 2, castle: true }
         ],
         specialCard: { id: 'stage_recover', row: 2, col: 1 }
       },
@@ -145,10 +145,10 @@ const BOARD_SIZE = 7;
         aiDifficulty: 'hard', bossType: 'demon',
         playerWalls: 6, aiWalls: 8,
         initialWalls: [
-          // 魔王の城壁
-          { cornerRow: 1, cornerCol: 3, orientation: 'h', owner: 2 },
-          { cornerRow: 1, cornerCol: 7, orientation: 'v', owner: 2 },
-          { cornerRow: 3, cornerCol: 5, orientation: 'h', owner: 2 }
+          // 魔王の城壁（壊せない）
+          { cornerRow: 1, cornerCol: 3, orientation: 'h', owner: 2, castle: true },
+          { cornerRow: 1, cornerCol: 7, orientation: 'v', owner: 2, castle: true },
+          { cornerRow: 3, cornerCol: 5, orientation: 'h', owner: 2, castle: true }
         ],
         specialCard: null
       }
@@ -3032,7 +3032,7 @@ const BOARD_SIZE = 7;
     function renderWalls() {
       // 壁表示をクリア
       document.querySelectorAll('.cell.wall-slot').forEach(cell => {
-        cell.classList.remove('has-wall', 'wall-player1', 'wall-player2', 'highlight-wall', 'preview', 'preview-player1', 'preview-player2', 'preview-active', 'preview-invalid', 'invalid');
+        cell.classList.remove('has-wall', 'wall-player1', 'wall-player2', 'wall-castle', 'highlight-wall', 'preview', 'preview-player1', 'preview-player2', 'preview-active', 'preview-invalid', 'invalid');
       });
 
       // 既存の壁を表示
@@ -3042,7 +3042,11 @@ const BOARD_SIZE = 7;
           const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
           if (cell) {
             cell.classList.add('has-wall');
-            cell.classList.add(`wall-player${wall.owner}`);
+            if (wall.castle) {
+              cell.classList.add('wall-castle');
+            } else {
+              cell.classList.add(`wall-player${wall.owner}`);
+            }
           }
         });
       });
@@ -3239,7 +3243,7 @@ const BOARD_SIZE = 7;
 
     // いたずらねこ: 壁を1枚移動
     function performWallShift() {
-      const bossWalls = gameState.walls.filter(w => w.owner === 2);
+      const bossWalls = gameState.walls.filter(w => w.owner === 2 && !w.castle);
       if (bossWalls.length === 0) return;
 
       // アンカーされていない壁だけ対象
@@ -3305,7 +3309,7 @@ const BOARD_SIZE = 7;
 
       // === いたずらねこ: 大移動（壁をゴール前に集中再配置） ===
       if (bossState.type === 'trickster') {
-        const bossWalls = gameState.walls.filter(w => w.owner === 2);
+        const bossWalls = gameState.walls.filter(w => w.owner === 2 && !w.castle);
         const movableWalls = bossWalls.filter(w =>
           !bossState.anchoredWalls.some(a =>
             a.cornerRow === w.cornerRow && a.cornerCol === w.cornerCol && a.orientation === w.orientation
@@ -3382,8 +3386,9 @@ const BOARD_SIZE = 7;
 
     // まおうねこ: 大地震（全壁破壊）
     function performEarthquake() {
-      // アンカーされた壁以外を全破壊
+      // 城壁とアンカーされた壁以外を全破壊
       gameState.walls = gameState.walls.filter(w =>
+        w.castle ||
         bossState.anchoredWalls.some(a =>
           a.cornerRow === w.cornerRow && a.cornerCol === w.cornerCol && a.orientation === w.orientation
         )
@@ -4043,6 +4048,12 @@ const BOARD_SIZE = 7;
 
       if (wallIndex === -1) return;
       const wall = gameState.walls[wallIndex];
+
+      // 城壁は操作不能
+      if (wall.castle) {
+        showToast('🏰 城壁は動かせないよ！', 'warn');
+        return;
+      }
 
       // スライド系カード: sumo_teppou, construction_move
       if (cardId === 'sumo_teppou' || cardId === 'construction_move' || cardId === 'slide' || cardId === 'stage_slide') {
@@ -5723,10 +5734,11 @@ const BOARD_SIZE = 7;
           }
         }
       }
-      // === 壁操作カード: 全壁をハイライト ===
+      // === 壁操作カード: 城壁以外の全壁をハイライト ===
       else if (['sumo_teppou', 'construction_move', 'construction_rotate', 'construction_blast',
                 'slide', 'rotate', 'walldestroy', 'stage_slide', 'stage_rotate'].includes(cardId)) {
         gameState.walls.forEach(wall => {
+          if (wall.castle) return; // 城壁は操作不能
           const cell = document.querySelector(`.cell[data-row="${wall.cornerRow}"][data-col="${wall.cornerCol}"]`);
           if (cell) cell.classList.add('highlight-wall');
         });
