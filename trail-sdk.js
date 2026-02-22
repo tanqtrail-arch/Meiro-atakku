@@ -69,12 +69,25 @@
 
     init(config = {}) {
       const saved = Storage.get('auth') || {};
+
+      // URLパラメータからトークンを取得（ポータルからの起動時）
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get('token');
+      const urlStudentId = params.get('student_id');
+      const urlTenantId = params.get('tenant_id');
+
       _config = {
         gameId:    config.gameId    ?? null,
-        tenantId:  config.tenantId  ?? null,
-        studentId: config.studentId ?? saved.studentId ?? null,
-        token:     config.token     ?? saved.token     ?? null,
+        tenantId:  urlTenantId  ?? config.tenantId  ?? null,
+        studentId: urlStudentId ? Number(urlStudentId) : (config.studentId ?? saved.studentId ?? null),
+        token:     urlToken     ?? config.token     ?? saved.token     ?? null,
       };
+
+      // URLからトークンを取得した場合はlocalStorageに保存
+      if (urlToken) {
+        Storage.set('auth', { token: urlToken, studentId: _config.studentId });
+      }
+
       console.log(`[TrailSDK] init: gameId=${_config.gameId}`);
       return this;
     },
