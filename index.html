@@ -2461,6 +2461,16 @@
     </div>
   </div>
 
-  <script src="game.js"></script>
+ <!-- TrailSDK -->
+<script src="https://trail-game-pro-3-2.onrender.com/js/trail-sdk.js"></script>
+<script>
+  const trailSDK = new TrailSDK({ gameId: 16, tenantSlug: 'trail' });
+  trailSDK.init().catch(() => {});
+  function trailStart() { trailSDK.startSession().catch(() => {}); }
+  function trailEnd(score) {
+    trailSDK.endSession({ score: score, correct: score, total: 1 })
+      .then(r => { if (r && r.alt) trailSDK.showAltPopup(r.alt); }).catch(() => {});
+  }
+</script> <script src="game.js"></script>
 </body>
 </html>
