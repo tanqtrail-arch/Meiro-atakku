@@ -2461,16 +2461,19 @@
     </div>
   </div>
 
- <!-- TrailSDK -->
-<script src="https://trail-game-pro-3-2.onrender.com/js/trail-sdk.js"></script>
+<!-- TrailSDK -->
+<script src="trail-sdk.js"></script>
 <script>
-  const trailSDK = new TrailSDK({ gameId: 16, tenantSlug: 'trail' });
-  trailSDK.init().catch(() => {});
-  function trailStart() { trailSDK.startSession().catch(() => {}); }
+  const trailSDK = TrailSDK.init({
+    gameId:   16,
+    tenantId: '0bca4097-51d0-4fed-90d5-3e1f22538806'
+  });
+  function trailStart() { trailSDK.startSession(); }
   function trailEnd(score) {
-    trailSDK.endSession({ score: score, correct: score, total: 1 })
-      .then(r => { if (r && r.alt) trailSDK.showAltPopup(r.alt); }).catch(() => {});
+    trailSDK.endSession({ score: score })
+      .then(r => { if (r?.alt) trailSDK.showAltPopup(r.alt); });
   }
-</script> <script src="game.js"></script>
+</script>
+<script src="game.js"></script>
 </body>
 </html>
