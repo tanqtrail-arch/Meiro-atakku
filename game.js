@@ -399,7 +399,7 @@ const BOARD_SIZE = 7;
     function startGame(mode, difficulty = 'easy') {
       gameMode = mode;
       aiDifficulty = difficulty;
-trailStart();
+      trailStart();
       // キャラクター選択画面へ
       document.getElementById('mode-select').classList.add('hidden');
       document.getElementById('ai-select').classList.add('hidden');
@@ -2046,11 +2046,11 @@ trailStart();
       if (p1.row === BOARD_SIZE - 1) {
         recordWin(1);
         gameState.gameOver = true;
-        trailEnd(playerNum);
+        trailEnd(1);
       } else if (p2.row === 0) {
         recordWin(2);
         gameState.gameOver = true;
-        trailEnd(playerNum);
+        trailEnd(2);
       }
     }
 
@@ -4356,6 +4356,7 @@ trailStart();
 
     function showWinner(playerNum) {
       gameState.gameOver = true;
+      trailEnd(playerNum);
       const overlay = document.getElementById('winner-overlay');
       const winnerCat = document.getElementById('winner-cat');
       const winnerText = document.getElementById('winner-text');

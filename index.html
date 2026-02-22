@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>迷路アタック 🐱 カード版</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://trail-game-pro.onrender.com/sdk/trail-auth.css">
   <style>
     * {
       margin: 0;
@@ -13,7 +17,7 @@
     }
 
     body {
-      font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      font-family: 'M PLUS Rounded 1c', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
       background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ffd1e8 100%);
       background-size: 300% 300%;
       animation: bgShift 12s ease infinite;
@@ -51,7 +55,7 @@
     .player-info {
       background: #fff;
       padding: 6px 10px;
-      border-radius: 16px;
+      border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       text-align: center;
       flex: 1;
@@ -119,21 +123,21 @@
     }
 
     .turn-indicator {
-      background: linear-gradient(135deg, #5d4e37 0%, #8d6e50 100%);
+      background: linear-gradient(135deg, #1a73e8 0%, #1565c0 100%);
       color: #fff;
       padding: 6px 16px;
-      border-radius: 20px;
+      border-radius: 12px;
       margin-bottom: 6px;
       font-size: 0.8rem;
       font-weight: bold;
       letter-spacing: 0.5px;
-      box-shadow: 0 2px 8px rgba(93, 78, 55, 0.3);
+      box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
       animation: turnPulse 2s ease-in-out infinite;
     }
 
     @keyframes turnPulse {
-      0%, 100% { box-shadow: 0 2px 8px rgba(93, 78, 55, 0.3); }
-      50% { box-shadow: 0 2px 16px rgba(93, 78, 55, 0.5); }
+      0%, 100% { box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3); }
+      50% { box-shadow: 0 2px 16px rgba(26, 115, 232, 0.5); }
     }
 
     .board-container {
@@ -147,7 +151,7 @@
         ),
         linear-gradient(145deg, #e8c88a 0%, #c9a265 30%, #d4a76a 70%, #e8c88a 100%);
       padding: 10px;
-      border-radius: 16px;
+      border-radius: 12px;
       box-shadow:
         0 10px 30px rgba(0,0,0,0.2),
         0 3px 8px rgba(0,0,0,0.12),
@@ -593,7 +597,7 @@
       padding: 12px 8px;
       font-size: 0.85rem;
       border: none;
-      border-radius: 16px;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
       font-family: inherit;
@@ -658,9 +662,10 @@
       background: linear-gradient(145deg, #fff 0%, #f5f5f5 100%);
       border-radius: 12px;
       font-size: 0.75rem;
-      color: #5d4e37;
+      color: #1a73e8;
       font-weight: bold;
       border: 1px solid #e0d6c8;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
 
     /* カード選択モーダル */
@@ -2461,17 +2466,95 @@
     </div>
   </div>
 
+<!-- PIN認証スクリーン -->
+<div id="pinScreen" style="display:none; position:fixed; inset:0; z-index:9000; background:linear-gradient(135deg,#1a73e8 0%,#0d47a1 100%); align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.18); padding:32px 28px; max-width:340px; width:90%; text-align:center;">
+    <div style="font-size:2rem; margin-bottom:8px;">🐱</div>
+    <h2 style="color:#1a73e8; margin-bottom:16px; font-family:'M PLUS Rounded 1c',sans-serif;">迷路アタック</h2>
+    <div id="pinPlayerName" style="display:none; margin-bottom:12px; font-weight:bold; color:#333; font-size:1.1rem;"></div>
+    <div id="trailAuthContainer"></div>
+  </div>
+</div>
+
 <!-- TrailSDK -->
-<script src="trail-sdk.js"></script>
+<script src="https://trail-game-pro.onrender.com/sdk/trail-sdk.js"></script>
+<script src="https://trail-game-pro.onrender.com/sdk/trail-auth.js"></script>
 <script>
-  const trailSDK = TrailSDK.init({
-    gameId:   16,
-    tenantId: '0bca4097-51d0-4fed-90d5-3e1f22538806'
-  });
-  function trailStart() { trailSDK.startSession(); }
+  let trailSDK = null;
+  (function initTrail() {
+    try {
+      trailSDK = new TrailSDK({ gameId: 10, tenantSlug: "trail" });
+    } catch (e) { /* SDK init failed */ }
+
+    var params = new URLSearchParams(window.location.search);
+    var token = params.get("token");
+
+    if (token) {
+      hidePinScreen();
+      return;
+    }
+
+    showPinScreen();
+  })();
+
+  function showPinScreen() {
+    var el = document.getElementById("pinScreen");
+    if (el) el.style.display = "flex";
+    try {
+      if (typeof TrailAuth !== "undefined") {
+        TrailAuth.renderLogin({
+          container: document.getElementById("trailAuthContainer"),
+          tenantSlug: "trail",
+          onSuccess: function() { onPinSuccess(); }
+        });
+      }
+    } catch (e) { /* auth render failed */ }
+  }
+
+  function hidePinScreen() {
+    var el = document.getElementById("pinScreen");
+    if (el) el.style.display = "none";
+  }
+
+  function onPinSuccess() {
+    hidePinScreen();
+    try {
+      if (trailSDK && typeof trailSDK.getPlayerName === "function") {
+        var name = trailSDK.getPlayerName();
+        if (name) {
+          var nameEl = document.getElementById("pinPlayerName");
+          if (nameEl) {
+            nameEl.textContent = "ようこそ、" + name + "さん！";
+            nameEl.style.display = "block";
+          }
+        }
+      }
+    } catch (e) { /* getPlayerName failed */ }
+  }
+
+  function trailStart() {
+    try {
+      if (trailSDK && typeof trailSDK.startSession === "function") {
+        trailSDK.startSession();
+      }
+    } catch (e) { /* startSession failed */ }
+  }
+
   function trailEnd(score) {
-    trailSDK.endSession({ score: score })
-      .then(r => { if (r?.alt) trailSDK.showAltPopup(r.alt); });
+    try {
+      if (trailSDK && typeof trailSDK.endSession === "function") {
+        var result = trailSDK.endSession({ score: score, correct: score, total: 1 });
+        if (result && typeof result.then === "function") {
+          result.then(function(r) {
+            try {
+              if (r && r.alt && typeof trailSDK.showAltPopup === "function") {
+                trailSDK.showAltPopup(r.alt);
+              }
+            } catch (e) { /* showAltPopup failed */ }
+          });
+        }
+      }
+    } catch (e) { /* endSession failed */ }
   }
 </script>
 <script src="game.js"></script>
