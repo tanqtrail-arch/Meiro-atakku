@@ -2474,16 +2474,8 @@
   const TRAIL_API = 'https://trail-game-pro-3-2.onrender.com';
   const TRAIL_PLAYER = new URLSearchParams(location.search).get('player') || null;
 
-  function calcAlt(score) {
-    if (score >= 1000) return 30;
-    if (score >= 500)  return 20;
-    if (score >= 100)  return 10;
-    return 5;
-  }
-
-  async function sendResultToTrail(score) {
+  async function sendResultToTrail(score, alt) {
     if (!TRAIL_PLAYER) return 0;
-    const alt = calcAlt(score);
     try {
       await fetch(`${TRAIL_API}/api/external/game-result`, {
         method: 'POST',
@@ -2512,8 +2504,8 @@
   function trailStart() {}
 
   // trailEnd を sendResultToTrail に置き換え
-  async function trailEnd(score) {
-    const alt = await sendResultToTrail(score);
+  async function trailEnd(score, alt) {
+    alt = await sendResultToTrail(score, alt || 0);
     if (alt > 0) {
       const altEl = document.getElementById('alt-message');
       if (altEl) {

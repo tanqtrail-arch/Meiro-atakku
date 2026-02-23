@@ -2046,11 +2046,11 @@ const BOARD_SIZE = 7;
       if (p1.row === BOARD_SIZE - 1) {
         recordWin(1);
         gameState.gameOver = true;
-        trailEnd(1);
+        trailEnd(1, 5);
       } else if (p2.row === 0) {
         recordWin(2);
         gameState.gameOver = true;
-        trailEnd(2);
+        trailEnd(2, 0);
       }
     }
 
@@ -4359,7 +4359,12 @@ const BOARD_SIZE = 7;
       // ALTメッセージをリセット
       const altEl = document.getElementById('alt-message');
       if (altEl) { altEl.style.display = 'none'; altEl.textContent = ''; }
-      trailEnd(playerNum);
+      // ALT: プレイヤー1（人間）が勝った場合のみ付与
+      // ステージモードはステージ星数×5、通常モードは10
+      const alt = playerNum === 1
+        ? (stageMode && currentStageIndex >= 0 ? STAGE_DATA[currentStageIndex].stars * 5 : 10)
+        : 0;
+      trailEnd(playerNum, alt);
       const overlay = document.getElementById('winner-overlay');
       const winnerCat = document.getElementById('winner-cat');
       const winnerText = document.getElementById('winner-text');
