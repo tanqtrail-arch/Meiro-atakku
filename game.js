@@ -4356,6 +4356,9 @@ const BOARD_SIZE = 7;
 
     function showWinner(playerNum) {
       gameState.gameOver = true;
+      // ALTメッセージをリセット
+      const altEl = document.getElementById('alt-message');
+      if (altEl) { altEl.style.display = 'none'; altEl.textContent = ''; }
       trailEnd(playerNum);
       const overlay = document.getElementById('winner-overlay');
       const winnerCat = document.getElementById('winner-cat');
@@ -4523,7 +4526,7 @@ const BOARD_SIZE = 7;
       showModeSelect();
     }
 
-    function goHome() {
+    function goHomeInGame() {
       if (!gameState.gameOver && gameState.turn > 1) {
         if (!confirm('ゲームをやめてタイトルにもどりますか？')) return;
       }

@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://trail-game-pro.onrender.com/sdk/trail-auth.css">
   <style>
     * {
       margin: 0;
@@ -2343,7 +2342,7 @@
   <!-- ゲーム画面 -->
   <div class="game-container hidden" id="game-container">
     <div class="game-header">
-      <button class="btn-home" onclick="goHome()">🏠</button>
+      <button class="btn-home" onclick="goHomeInGame()">🏠</button>
       <h1>迷路アタック 🐱✨</h1>
     </div>
 
@@ -2409,8 +2408,10 @@
     <div class="winner-modal">
       <div class="winner-cat" id="winner-cat">🐱</div>
       <div class="winner-text" id="winner-text">ちゃとら の かち！</div>
+      <div id="alt-message" style="display:none; color:#ffd700; font-size:1.2rem; font-weight:bold; margin-bottom:12px; text-shadow:1px 1px 4px rgba(0,0,0,0.5);"></div>
       <button class="btn-reset" onclick="resetGame()">🔄 もういっかい あそぶ</button>
       <button class="back-btn" onclick="backToTitle()" style="margin-top:10px;">🏠 タイトルへ</button>
+      <button class="back-btn" onclick="goHome()" style="margin-top:10px;">🏠 ホームに戻る</button>
     </div>
   </div>
 
@@ -2466,95 +2467,60 @@
     </div>
   </div>
 
-<!-- PIN認証スクリーン -->
-<div id="pinScreen" style="display:none; position:fixed; inset:0; z-index:9000; background:linear-gradient(135deg,#1a73e8 0%,#0d47a1 100%); align-items:center; justify-content:center;">
-  <div style="background:#fff; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.18); padding:32px 28px; max-width:340px; width:90%; text-align:center;">
-    <div style="font-size:2rem; margin-bottom:8px;">🐱</div>
-    <h2 style="color:#1a73e8; margin-bottom:16px; font-family:'M PLUS Rounded 1c',sans-serif;">迷路アタック</h2>
-    <div id="pinPlayerName" style="display:none; margin-bottom:12px; font-weight:bold; color:#333; font-size:1.1rem;"></div>
-    <div id="trailAuthContainer"></div>
-  </div>
-</div>
 
-<!-- TrailSDK -->
-<script src="https://trail-game-pro.onrender.com/sdk/trail-sdk.js"></script>
-<script src="https://trail-game-pro.onrender.com/sdk/trail-auth.js"></script>
+<!-- TRAIL GP3 連携 -->
 <script>
-  let trailSDK = null;
-  (function initTrail() {
+  // ─── TRAIL GP3 連携 ───
+  const TRAIL_API = 'https://trail-game-pro-3-2.onrender.com';
+  const TRAIL_PLAYER = new URLSearchParams(location.search).get('player') || null;
+
+  function calcAlt(score) {
+    if (score >= 1000) return 30;
+    if (score >= 500)  return 20;
+    if (score >= 100)  return 10;
+    return 5;
+  }
+
+  async function sendResultToTrail(score) {
+    if (!TRAIL_PLAYER) return 0;
+    const alt = calcAlt(score);
     try {
-      trailSDK = new TrailSDK({ gameId: 10, tenantSlug: "trail" });
-    } catch (e) { /* SDK init failed */ }
-
-    var params = new URLSearchParams(window.location.search);
-    var token = params.get("token");
-
-    if (token) {
-      hidePinScreen();
-      return;
+      await fetch(`${TRAIL_API}/api/external/game-result`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player: TRAIL_PLAYER,
+          game_id: 'meiro-atakku',
+          game_name: '迷路アタック',
+          score: score,
+          alt: alt
+        })
+      });
+    } catch (e) {
+      console.error('ALT送信失敗:', e);
     }
-
-    showPinScreen();
-  })();
-
-  function showPinScreen() {
-    var el = document.getElementById("pinScreen");
-    if (el) el.style.display = "flex";
-    try {
-      if (typeof TrailAuth !== "undefined") {
-        TrailAuth.renderLogin({
-          container: document.getElementById("trailAuthContainer"),
-          tenantSlug: "trail",
-          onSuccess: function() { onPinSuccess(); }
-        });
-      }
-    } catch (e) { /* auth render failed */ }
+    return alt;
   }
 
-  function hidePinScreen() {
-    var el = document.getElementById("pinScreen");
-    if (el) el.style.display = "none";
+  function goHome() {
+    window.location.href = TRAIL_PLAYER
+      ? 'https://trail-game-pro-3-2.onrender.com'
+      : location.href.split('?')[0];
   }
 
-  function onPinSuccess() {
-    hidePinScreen();
-    try {
-      if (trailSDK && typeof trailSDK.getPlayerName === "function") {
-        var name = trailSDK.getPlayerName();
-        if (name) {
-          var nameEl = document.getElementById("pinPlayerName");
-          if (nameEl) {
-            nameEl.textContent = "ようこそ、" + name + "さん！";
-            nameEl.style.display = "block";
-          }
-        }
-      }
-    } catch (e) { /* getPlayerName failed */ }
-  }
+  // trailStart は不要（互換性のために空関数として残す）
+  function trailStart() {}
 
-  function trailStart() {
-    try {
-      if (trailSDK && typeof trailSDK.startSession === "function") {
-        trailSDK.startSession();
+  // trailEnd を sendResultToTrail に置き換え
+  async function trailEnd(score) {
+    const alt = await sendResultToTrail(score);
+    if (alt > 0) {
+      const altEl = document.getElementById('alt-message');
+      if (altEl) {
+        altEl.textContent = '🪙 ' + alt + ' ALT を獲得！';
+        altEl.style.display = 'block';
       }
-    } catch (e) { /* startSession failed */ }
-  }
-
-  function trailEnd(score) {
-    try {
-      if (trailSDK && typeof trailSDK.endSession === "function") {
-        var result = trailSDK.endSession({ score: score, correct: score, total: 1 });
-        if (result && typeof result.then === "function") {
-          result.then(function(r) {
-            try {
-              if (r && r.alt && typeof trailSDK.showAltPopup === "function") {
-                trailSDK.showAltPopup(r.alt);
-              }
-            } catch (e) { /* showAltPopup failed */ }
-          });
-        }
-      }
-    } catch (e) { /* endSession failed */ }
+    }
   }
 </script>
 <script src="game.js"></script>
