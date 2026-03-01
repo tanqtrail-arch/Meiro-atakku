@@ -2411,7 +2411,7 @@
       <div id="alt-message" style="display:none; color:#ffd700; font-size:1.2rem; font-weight:bold; margin-bottom:12px; text-shadow:1px 1px 4px rgba(0,0,0,0.5);"></div>
       <button class="btn-reset" onclick="resetGame()">🔄 もういっかい あそぶ</button>
       <button class="back-btn" onclick="backToTitle()" style="margin-top:10px;">🏠 タイトルへ</button>
-      <button class="back-btn" onclick="goHome()" style="margin-top:10px;">🏠 ホームに戻る</button>
+      <button class="back-btn" onclick="TrailNav.goToTGP32()" style="margin-top:10px;">🏠 ホームに戻る</button>
     </div>
   </div>
 
@@ -2468,51 +2468,32 @@
   </div>
 
 
-<!-- TRAIL GP3 連携 -->
+<!-- ===== TrailNav v2 ===== -->
+<script src="trail-nav.js"></script>
 <script>
-  // ─── TRAIL GP3 連携 ───
-  const TRAIL_API = 'https://trail-game-pro-3-2.onrender.com';
-  const TRAIL_PLAYER = new URLSearchParams(location.search).get('player') || null;
+  TrailNav.init({
+    gameName: '迷路アタック',
+    gameId: 'Meiro-atakku',
+    gameEmoji: '🐱',
+    gameHomeId: 'mode-select',
+    tgp32Url: 'https://trail-game-pro-3-2.onrender.com',
+    apiBase: 'https://trail-game-pro-3-2.onrender.com/api',
+  });
 
-  async function sendResultToTrail(score, alt) {
-    if (!TRAIL_PLAYER) return 0;
-    try {
-      await fetch(`${TRAIL_API}/api/external/game-result`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          player: TRAIL_PLAYER,
-          game_id: 'meiro-atakku',
-          game_name: '迷路アタック',
-          score: score,
-          alt: alt
-        })
-      });
-    } catch (e) {
-      console.error('ALT送信失敗:', e);
-    }
-    return alt;
+  // 互換用: 旧 trailEnd → TrailNav.reportGameResult
+  function trailEnd(score, alt) {
+    TrailNav.reportGameResult({
+      score: alt || 0,
+      correctCount: score === 1 ? 1 : 0,
+      totalCount: 1,
+      maxStreak: score === 1 ? 1 : 0,
+    });
   }
 
-  function goHome() {
-    window.location.href = TRAIL_PLAYER
-      ? 'https://trail-game-pro-3-2.onrender.com'
-      : location.href.split('?')[0];
-  }
-
-  // trailStart は不要（互換性のために空関数として残す）
   function trailStart() {}
 
-  // trailEnd を sendResultToTrail に置き換え
-  async function trailEnd(score, alt) {
-    alt = await sendResultToTrail(score, alt || 0);
-    if (alt > 0) {
-      const altEl = document.getElementById('alt-message');
-      if (altEl) {
-        altEl.textContent = '🪙 ' + alt + ' ALT を獲得！';
-        altEl.style.display = 'block';
-      }
-    }
+  function goHome() {
+    TrailNav.goToTGP32();
   }
 </script>
 <script src="game.js"></script>
