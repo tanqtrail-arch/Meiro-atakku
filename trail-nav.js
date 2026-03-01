@@ -3,7 +3,7 @@
  * ★ GAME_INTEGRATION_STANDARD.md 準拠版
  *
  * v1からの変更点:
- *   - goToTGP32(): window.location.href → window.close() に修正
+ *   - goToTGP32(): window.close() → return_url への window.location.href に修正
  *   - ALT送信: /api/alt/add → /api/external/game-result に修正
  *   - earnAlt()/flushAlt() → reportGameResult() に統合
  *
@@ -116,20 +116,21 @@ const TrailNav = (() => {
 
   // ===== ナビゲーション =====
 
-  // ★ TGP3.2に戻る（window.close()を使用・window.location.href禁止）
+  // ★ TGP3.2に戻る（return_urlへ遷移、なければフォールバックUI表示）
   function goToTGP32() {
-    window.close();
-    // window.close()が効かない場合のフォールバック
-    setTimeout(() => {
-      document.body.innerHTML = `
-        <div style="text-align:center; padding:60px 20px; font-family:sans-serif;
-                    background:#1a1a2e; color:#fff; min-height:100vh;
-                    display:flex; flex-direction:column; justify-content:center;">
-          <h2 style="font-size:24px; margin-bottom:16px;">🎮 ゲーム終了！</h2>
-          <p style="font-size:16px; color:#aaa;">ブラウザのタブから<br>TRAILポータルに戻ってください。</p>
-        </div>
-      `;
-    }, 500);
+    if (params.returnUrl) {
+      window.location.href = params.returnUrl;
+      return;
+    }
+    // return_urlがない場合のフォールバック（history.backで戻れるボタン付き）
+    document.body.innerHTML = `
+      <div style="text-align:center; padding:60px 20px; font-family:sans-serif;
+                  background:#1a1a2e; color:#fff; min-height:100vh;
+                  display:flex; flex-direction:column; justify-content:center;">
+        <h2 style="font-size:24px; margin-bottom:16px;">🎮 ゲーム終了！</h2>
+        <button onclick="history.back()" style="display:block; margin:20px auto; padding:16px 40px; font-size:18px; background:#4A90D9; color:white; border:none; border-radius:12px; cursor:pointer;">🏠 TRAILポータルに戻る</button>
+      </div>
+    `;
   }
 
   // ゲーム内ホームに戻る
