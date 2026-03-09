@@ -2471,29 +2471,20 @@
 <!-- ===== TrailNav v2 ===== -->
 <script src="trail-nav.js"></script>
 <script>
-  TrailNav.init({
-    gameName: '迷路アタック',
-    gameId: 'Meiro-atakku',
-    gameEmoji: '🐱',
-    gameHomeId: 'mode-select',
-    tgp32Url: 'https://trail-game-pro-3-2.onrender.com',
-    apiBase: 'https://trail-game-pro-3-2.onrender.com/api',
-  });
+  DarwinBridge.ready();
 
-  // 互換用: 旧 trailEnd → TrailNav.reportGameResult
   function trailEnd(score, alt) {
-    TrailNav.reportGameResult({
+    DarwinBridge.stageClear({
       score: alt || 0,
-      correctCount: score === 1 ? 1 : 0,
-      totalCount: 1,
-      maxStreak: score === 1 ? 1 : 0,
+      correct: score === 1 ? 1 : 0,
+      total: 1,
     });
   }
 
   function trailStart() {}
 
   function goHome() {
-    TrailNav.goToTGP32();
+    DarwinBridge.exit();
   }
 </script>
 <script src="game.js"></script>

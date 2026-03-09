@@ -4541,7 +4541,7 @@ const BOARD_SIZE = 7;
       document.getElementById('winner-overlay').classList.remove('show');
       document.getElementById('ai-thinking').classList.add('hidden');
       document.getElementById('game-container').classList.remove('ai-mode');
-      showModeSelect();
+      DarwinBridge.exit();
     }
 
     function switchPlayer() {
